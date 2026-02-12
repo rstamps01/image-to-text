@@ -10,6 +10,7 @@ import {
   updateProject,
   deleteProject,
   createPage,
+  getPageById,
   getPagesByProjectId,
   updatePage,
   updatePageStatus,
@@ -158,9 +159,7 @@ export const appRouter = router({
     processOCR: protectedProcedure
       .input(z.object({ pageId: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        const page = await getPagesByProjectId(0).then(pages => 
-          pages.find(p => p.id === input.pageId)
-        );
+        const page = await getPageById(input.pageId);
         
         if (!page) {
           throw new Error("Page not found");

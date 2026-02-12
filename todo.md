@@ -48,3 +48,6 @@
 - [x] Verify all export formats work correctly
 - [x] Create deployment checkpoint
 - [x] Document usage instructions
+
+## Bug Fixes
+- [x] Fix "Page not found" error in processOCR procedure
