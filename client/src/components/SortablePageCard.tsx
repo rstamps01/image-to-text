@@ -13,6 +13,8 @@ interface SortablePageCardProps {
     extractedText: string | null;
     errorMessage: string | null;
     confidenceScore: number | null;
+    placementConfidence?: number | null;
+    needsValidation?: string | null;
   };
   onPreview: () => void;
   onRetry: () => void;
@@ -151,6 +153,12 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
         )}
         {page.errorMessage && (
           <p className="text-xs text-destructive mt-1">{page.errorMessage}</p>
+        )}
+        {page.needsValidation === "yes" && (
+          <div className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 rounded border border-yellow-500/20">
+            <span className="text-yellow-600 dark:text-yellow-400">⚠</span>
+            Verify placement
+          </div>
         )}
       </div>
     </div>

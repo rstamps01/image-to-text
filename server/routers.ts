@@ -449,6 +449,113 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Add additional pages to existing project with intelligent placement
+    addPages: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          pages: z.array(
+            z.object({
+              filename: z.string(),
+              imageData: z.string(), // Base64 encoded image
+              mimeType: z.string(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const project = await getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        const { determinePlacement, reorderPages } = await import("./placementService");
+        const existingPages = await getPagesByProjectId(input.projectId);
+        const results = [];
+
+        for (const pageData of input.pages) {
+          try {
+            // Convert base64 to buffer
+            const base64Data = pageData.imageData.split(",")[1] || pageData.imageData;
+            const buffer = Buffer.from(base64Data, "base64");
+
+            // Upload to S3
+            const fileKey = `projects/${input.projectId}/pages/${nanoid()}-${pageData.filename}`;
+            const { url } = await storagePut(fileKey, buffer, pageData.mimeType);
+
+            // Perform OCR first to detect page number
+            const ocrResult = await performOCR(url);
+
+            // Determine placement
+            const placement = determinePlacement(
+              ocrResult.detectedPageNumber,
+              pageData.filename,
+              existingPages.map(p => ({
+                id: p.id,
+                sortOrder: p.sortOrder,
+                detectedPageNumber: p.detectedPageNumber,
+                filename: p.filename,
+              }))
+            );
+
+            // Create page record with placement info
+            const page = await createPage({
+              projectId: input.projectId,
+              filename: pageData.filename,
+              imageKey: fileKey,
+              imageUrl: url,
+              status: "completed",
+              extractedText: ocrResult.extractedText,
+              detectedPageNumber: ocrResult.detectedPageNumber,
+              formattingData: ocrResult.formattingData as any,
+              confidenceScore: Math.round(ocrResult.confidence * 100),
+              sortOrder: Math.floor(placement.sortOrder),
+              placementConfidence: placement.confidence,
+              needsValidation: placement.needsValidation,
+            });
+
+            // Reorder existing pages if needed
+            const updates = reorderPages(
+              existingPages.map(p => ({
+                id: p.id,
+                sortOrder: p.sortOrder,
+                detectedPageNumber: p.detectedPageNumber,
+                filename: p.filename,
+              })),
+              placement.sortOrder
+            );
+
+            for (const [pageId, newOrder] of Array.from(updates.entries())) {
+              await updatePage(pageId, { sortOrder: newOrder });
+            }
+
+            results.push({
+              filename: pageData.filename,
+              success: true,
+              pageId: page.id,
+              sortOrder: placement.sortOrder,
+              confidence: placement.confidence,
+              needsValidation: placement.needsValidation,
+              reason: placement.reason,
+            });
+          } catch (error) {
+            results.push({
+              filename: pageData.filename,
+              success: false,
+              error: error instanceof Error ? error.message : "Upload failed",
+            });
+          }
+        }
+
+        return {
+          success: true,
+          results,
+        };
+      }),
+
     // Manually reorder pages by dragging
     reorderManual: protectedProcedure
       .input(

@@ -67,6 +67,10 @@ export const pages = mysqlTable("pages", {
   extractedText: text("extractedText"),
   /** OCR confidence score (0-100) indicating the reliability of the extracted text */
   confidenceScore: int("confidenceScore"),
+  /** Placement confidence (0-100) indicating how certain the page placement is */
+  placementConfidence: int("placementConfidence").default(100),
+  /** Whether this page needs user validation for placement */
+  needsValidation: mysqlEnum("needsValidation", ["yes", "no"]).default("no").notNull(),
   /** Structured formatting information (paragraphs, headings, lists, etc.) */
   formattingData: json("formattingData"),
   /** Error message if OCR failed */

@@ -68,3 +68,11 @@
 - [x] Add export preview showing first 3 pages before full document generation
 - [x] Add drag-and-drop page reordering with visual feedback and sort order updates
 - [x] Add OCR confidence scores to completed pages with percentage display
+
+## New Feature: Add Pages to Existing Projects
+- [x] Add placementConfidence field to pages table schema
+- [x] Implement intelligent placement algorithm based on page numbers
+- [x] Add fallback placement logic using filename and metadata analysis
+- [x] Create UI for uploading additional pages to existing projects
+- [x] Display validation warnings for uncertain placements
+- [x] Add visual indicators on pages requiring user validation

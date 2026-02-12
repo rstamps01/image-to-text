@@ -97,6 +97,7 @@ export default function ProjectDetail() {
   const retrySingleMutation = trpc.pages.retrySingle.useMutation();
   const updateTextMutation = trpc.pages.updateText.useMutation();
   const reorderMutation = trpc.pages.reorderManual.useMutation();
+  const addPagesMutation = trpc.pages.addPages.useMutation();
   
   const { data: previewData, isLoading: isLoadingPreview, refetch: refetchPreview } = trpc.export.preview.useQuery(
     { projectId, format: previewFormat },
@@ -146,6 +147,48 @@ export default function ProjectDetail() {
       setLocation("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete project");
+    }
+  };
+
+  const handleAddPages = async (files: File[]) => {
+    try {
+      const pages = await Promise.all(
+        files.map(async (file) => {
+          const reader = new FileReader();
+          const imageData = await new Promise<string>((resolve) => {
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+
+          return {
+            filename: file.name,
+            imageData,
+            mimeType: file.type,
+          };
+        })
+      );
+
+      const result = await addPagesMutation.mutateAsync({
+        projectId,
+        pages,
+      });
+
+      const successCount = result.results.filter((r: any) => r.success).length;
+      const needsValidation = result.results.filter((r: any) => r.needsValidation === "yes");
+
+      if (successCount > 0) {
+        toast.success(`Added ${successCount} page(s) successfully`);
+        if (needsValidation.length > 0) {
+          toast.warning(`${needsValidation.length} page(s) need validation. Check placement carefully.`);
+        }
+        await refetch();
+      }
+
+      if (successCount < files.length) {
+        toast.error(`Failed to add ${files.length - successCount} page(s)`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add pages");
     }
   };
 
@@ -339,13 +382,30 @@ export default function ProjectDetail() {
                 <p className="text-muted-foreground">{project.description}</p>
               )}
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-2 w-4 h-4" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = async (e: any) => {
+                  const files = Array.from(e.target.files || []) as File[];
+                  if (files.length > 0) {
+                    await handleAddPages(files);
+                  }
+                };
+                input.click();
+              }}>
+                <FileText className="mr-2 w-4 h-4" />
+                Add Pages
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="mr-2 w-4 h-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Project</AlertDialogTitle>
@@ -359,6 +419,7 @@ export default function ProjectDetail() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            </div>
           </div>
         </div>
 

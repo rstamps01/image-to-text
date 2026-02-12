@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `pages` ADD `placementConfidence` int DEFAULT 100;\nALTER TABLE `pages` ADD `needsValidation` enum('yes','no') DEFAULT 'no' NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute ALTER TABLE `pages` ADD `placementConfidence` int DEFAULT 100;\nALTER TABLE `pages` ADD `needsValidation` enum('yes','no') DEFAULT 'no' NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 982
+}
