@@ -918,7 +918,7 @@ export default function ProjectDetail() {
 
       {/* Cleanup Preview Modal */}
       <Dialog open={showCleanupPreview} onOpenChange={setShowCleanupPreview}>
-        <DialogContent className="w-screen max-w-none h-[95vh] !left-0 !translate-x-0 !top-1/2 !-translate-y-1/2">
+        <DialogContent className="w-screen max-w-none h-screen !left-0 !translate-x-0 !top-0 !translate-y-0 !rounded-none">
           <DialogHeader>
             <DialogTitle>Cleanup Preview - Before & After</DialogTitle>
             <DialogDescription>
@@ -927,7 +927,7 @@ export default function ProjectDetail() {
                 : "Upload and process pages to see cleanup preview"}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 h-[calc(95vh-120px)] overflow-hidden">
+          <div className="grid grid-cols-2 gap-4 h-[calc(100vh-120px)] overflow-hidden">
             {isLoadingCleanupPreview ? (
               <div className="col-span-2 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />

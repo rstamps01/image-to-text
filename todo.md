@@ -125,3 +125,6 @@
 - [x] Create preview modal UI with side-by-side original vs cleaned text comparison
 - [x] Add "Preview Cleanup" button next to the cleanup toggle
 - [x] Test the preview feature with various text samples
+
+## Modal Expansion
+- [x] Expand cleanup preview modal to use full browser window dimensions
