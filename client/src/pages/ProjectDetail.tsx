@@ -699,7 +699,7 @@ export default function ProjectDetail() {
 
       {/* Image Preview Modal with Text Editor */}
       <Dialog open={previewPage !== null} onOpenChange={(open) => !open && setPreviewPage(null)}>
-        <DialogContent className="w-screen max-w-none h-[95vh] m-0">
+        <DialogContent className="!w-screen !max-w-none h-[95vh] !m-0 !left-0 !translate-x-0 !top-[2.5vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>{previewPage?.filename}</span>
