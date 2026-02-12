@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, FileText, Upload, Sparkles, ArrowRight, Plus } from "lucide-react";
+import { BookOpen, FileText, Upload, Sparkles, ArrowRight, Plus, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -11,6 +14,59 @@ export default function Home() {
   const { data: projects, isLoading: projectsLoading } = trpc.projects.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const [selectedProjects, setSelectedProjects] = useState<Set<number>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const utils = trpc.useUtils();
+  const bulkDeleteMutation = trpc.projects.bulkDelete.useMutation({
+    onSuccess: (result) => {
+      if (result.deletedCount > 0) {
+        toast.success(`Deleted ${result.deletedCount} project${result.deletedCount > 1 ? 's' : ''}`);
+        if (result.errors.length > 0) {
+          toast.error(`${result.errors.length} project(s) failed to delete`);
+        }
+      } else {
+        toast.error('Failed to delete projects');
+      }
+      setSelectedProjects(new Set());
+      utils.projects.list.invalidate();
+      setIsDeleting(false);
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+      setIsDeleting(false);
+    },
+  });
+  
+  const handleToggleProject = (projectId: number) => {
+    setSelectedProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+      }
+      return newSet;
+    });
+  };
+  
+  const handleToggleAll = () => {
+    if (selectedProjects.size === projects?.length) {
+      setSelectedProjects(new Set());
+    } else {
+      setSelectedProjects(new Set(projects?.map(p => p.id) || []));
+    }
+  };
+  
+  const handleBulkDelete = async () => {
+    if (selectedProjects.size === 0) return;
+    
+    const confirmed = confirm(`Are you sure you want to delete ${selectedProjects.size} project${selectedProjects.size > 1 ? 's' : ''}?`);
+    if (!confirmed) return;
+    
+    setIsDeleting(true);
+    await bulkDeleteMutation.mutateAsync({ projectIds: Array.from(selectedProjects) });
+  };
 
   if (loading) {
     return (
@@ -106,13 +162,41 @@ export default function Home() {
               Convert book page screenshots into searchable documents
             </p>
           </div>
-          <Button size="lg" asChild className="shadow-elegant">
-            <Link href="/projects/new">
-              <Plus className="mr-2 w-5 h-5" />
-              New Project
-            </Link>
-          </Button>
+          <div className="flex gap-3">
+            {selectedProjects.size > 0 && (
+              <Button
+                size="lg"
+                variant="destructive"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="shadow-elegant"
+              >
+                <Trash2 className="mr-2 w-5 h-5" />
+                Delete {selectedProjects.size} Project{selectedProjects.size > 1 ? 's' : ''}
+              </Button>
+            )}
+            <Button size="lg" asChild className="shadow-elegant">
+              <Link href="/projects/new">
+                <Plus className="mr-2 w-5 h-5" />
+                New Project
+              </Link>
+            </Button>
+          </div>
         </div>
+        
+        {/* Bulk Selection Controls */}
+        {projects && projects.length > 0 && (
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-muted/30">
+            <Checkbox
+              checked={selectedProjects.size === projects.length && projects.length > 0}
+              onCheckedChange={handleToggleAll}
+              id="select-all"
+            />
+            <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+              Select All ({selectedProjects.size} / {projects.length})
+            </label>
+          </div>
+        )}
 
         {/* Projects Grid */}
         {projectsLoading ? (
@@ -133,8 +217,23 @@ export default function Home() {
         ) : projects && projects.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map(project => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
-                <Card className="border-border/50 shadow-elegant hover:shadow-elegant-lg transition-elegant cursor-pointer h-full">
+              <div key={project.id} className="relative">
+                <div
+                  className="absolute top-3 left-3 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleProject(project.id);
+                  }}
+                >
+                  <Checkbox
+                    checked={selectedProjects.has(project.id)}
+                    onCheckedChange={() => handleToggleProject(project.id)}
+                    className="bg-background border-2"
+                  />
+                </div>
+                <Link href={`/projects/${project.id}`}>
+                  <Card className="border-border/50 shadow-elegant hover:shadow-elegant-lg transition-elegant cursor-pointer h-full pl-10">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -169,7 +268,8 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         ) : (

@@ -88,6 +88,35 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Bulk delete projects
+    bulkDelete: protectedProcedure
+      .input(z.object({ projectIds: z.array(z.number()) }))
+      .mutation(async ({ ctx, input }) => {
+        let deletedCount = 0;
+        const errors: string[] = [];
+
+        for (const projectId of input.projectIds) {
+          try {
+            const project = await getProjectById(projectId);
+            if (!project) {
+              errors.push(`Project ${projectId} not found`);
+              continue;
+            }
+            if (project.userId !== ctx.user.id) {
+              errors.push(`Unauthorized to delete project ${projectId}`);
+              continue;
+            }
+
+            await deleteProject(projectId);
+            deletedCount++;
+          } catch (error) {
+            errors.push(`Failed to delete project ${projectId}: ${error}`);
+          }
+        }
+
+        return { deletedCount, errors, success: deletedCount > 0 };
+      }),
+
     // Update project status
     updateStatus: protectedProcedure
       .input(
