@@ -51,3 +51,6 @@
 
 ## Bug Fixes
 - [x] Fix "Page not found" error in processOCR procedure
+
+## New Features
+- [x] Add real-time progress bars for OCR processing

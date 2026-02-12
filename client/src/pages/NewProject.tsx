@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Upload, X, FileImage, Loader2, ArrowLeft } from "lucide-react";
@@ -14,6 +15,7 @@ interface UploadedFile {
   file: File;
   preview: string;
   status: "pending" | "uploading" | "processing" | "completed" | "failed";
+  progress: number; // 0-100 percentage
   pageNumber?: string;
   error?: string;
 }
@@ -64,6 +66,7 @@ export default function NewProject() {
       file,
       preview: URL.createObjectURL(file),
       status: "pending" as const,
+      progress: 0,
     }));
 
     setFiles(prev => [...prev, ...uploadedFiles]);
@@ -113,6 +116,7 @@ export default function NewProject() {
           setFiles(prev => {
             const updated = [...prev];
             updated[i].status = "uploading";
+            updated[i].progress = 10;
             return updated;
           });
 
@@ -133,6 +137,7 @@ export default function NewProject() {
           setFiles(prev => {
             const updated = [...prev];
             updated[i].status = "processing";
+            updated[i].progress = 50;
             return updated;
           });
 
@@ -145,6 +150,7 @@ export default function NewProject() {
           setFiles(prev => {
             const updated = [...prev];
             updated[i].status = "completed";
+            updated[i].progress = 100;
             updated[i].pageNumber = ocrResult.pageNumber || undefined;
             return updated;
           });
@@ -153,6 +159,7 @@ export default function NewProject() {
           setFiles(prev => {
             const updated = [...prev];
             updated[i].status = "failed";
+            updated[i].progress = 0;
             updated[i].error = error instanceof Error ? error.message : "Processing failed";
             return updated;
           });
@@ -290,10 +297,29 @@ export default function NewProject() {
                           className="w-12 h-12 object-cover rounded"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {uploadedFile.file.name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium truncate">
+                              {uploadedFile.file.name}
+                            </p>
+                            {(uploadedFile.status === "uploading" ||
+                              uploadedFile.status === "processing") && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {uploadedFile.progress}%
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Progress Bar */}
+                          {(uploadedFile.status === "uploading" ||
+                            uploadedFile.status === "processing" ||
+                            uploadedFile.status === "completed") && (
+                            <Progress 
+                              value={uploadedFile.progress} 
+                              className="h-1.5 mb-2"
+                            />
+                          )}
+                          
+                          <div className="flex items-center gap-2">
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full ${
                                 uploadedFile.status === "completed"
@@ -314,7 +340,7 @@ export default function NewProject() {
                               </span>
                             )}
                             {uploadedFile.error && (
-                              <span className="text-xs text-destructive">
+                              <span className="text-xs text-destructive truncate">
                                 {uploadedFile.error}
                               </span>
                             )}
