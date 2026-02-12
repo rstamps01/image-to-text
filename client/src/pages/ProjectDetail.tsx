@@ -699,7 +699,7 @@ export default function ProjectDetail() {
 
       {/* Image Preview Modal with Text Editor */}
       <Dialog open={previewPage !== null} onOpenChange={(open) => !open && setPreviewPage(null)}>
-        <DialogContent className="max-w-7xl w-full max-h-[90vh]">
+        <DialogContent className="max-w-[98vw] w-full max-h-[95vh] h-[95vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>{previewPage?.filename}</span>
@@ -763,7 +763,7 @@ export default function ProjectDetail() {
               </Button>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-4 max-h-[70vh]">
+            <div className="grid md:grid-cols-2 gap-4 h-[calc(95vh-180px)]">
               {/* Image Preview with Synchronized Scroll */}
               <div 
                 ref={imageScrollRef}

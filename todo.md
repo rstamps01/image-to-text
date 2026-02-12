@@ -85,3 +85,6 @@
 
 ## Current Issues
 - [x] Debug and fix OCR processing error: "500 Internal Server Error - received bad response from upstream"
+
+## UI Improvements
+- [x] Expand side-by-side comparison modal to use full browser window
