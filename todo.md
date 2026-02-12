@@ -119,3 +119,9 @@
 
 ## Bug Fixes (Current)
 - [x] Fix cleanup toggle switch requiring browser refresh to update position
+
+## Cleanup Preview Feature
+- [x] Add backend endpoint to generate cleanup preview for a sample page
+- [x] Create preview modal UI with side-by-side original vs cleaned text comparison
+- [x] Add "Preview Cleanup" button next to the cleanup toggle
+- [x] Test the preview feature with various text samples

@@ -163,6 +163,48 @@ export const appRouter = router({
         await updateProject(input.projectId, updates);
         return { success: true };
       }),
+
+    // Preview cleanup effect on a sample page
+    previewCleanup: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const { projectId } = input;
+
+        // Get the project and verify ownership
+        const project = await getProjectById(projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        // Get a sample completed page (first one)
+        const pages = await getPagesByProjectId(projectId);
+        const completedPage = pages.find(p => p.status === "completed" && p.extractedText);
+
+        if (!completedPage || !completedPage.extractedText) {
+          return {
+            hasPreview: false,
+            message: "No completed pages with text found. Upload and process pages first.",
+          };
+        }
+
+        const originalText = completedPage.extractedText;
+        const cleanedText = cleanupOCRText(originalText);
+
+        return {
+          hasPreview: true,
+          originalText,
+          cleanedText,
+          pageNumber: completedPage.detectedPageNumber || completedPage.sortOrder,
+          filename: completedPage.filename,
+        };
+      }),
   }),
 
   pages: router({

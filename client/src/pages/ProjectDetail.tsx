@@ -55,6 +55,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -76,6 +77,7 @@ export default function ProjectDetail() {
   const [isSavingText, setIsSavingText] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<"md" | "txt">("md");
+  const [showCleanupPreview, setShowCleanupPreview] = useState(false);
   const [localPages, setLocalPages] = useState<any[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [imageZoom, setImageZoom] = useState(100);
@@ -113,6 +115,11 @@ export default function ProjectDetail() {
   const { data: previewData, isLoading: isLoadingPreview, refetch: refetchPreview } = trpc.export.preview.useQuery(
     { projectId, format: previewFormat },
     { enabled: showPreview && projectId > 0 }
+  );
+
+  const { data: cleanupPreviewData, isLoading: isLoadingCleanupPreview } = trpc.projects.previewCleanup.useQuery(
+    { projectId },
+    { enabled: showCleanupPreview && projectId > 0 }
   );
 
   // Sync local pages with data
@@ -494,21 +501,32 @@ export default function ProjectDetail() {
                   Automatically remove common OCR artifacts (duplicate spaces, stray punctuation, formatting inconsistencies) from extracted text
                 </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
-                <input
-                  type="checkbox"
-                  checked={project.enableCleanup === 'yes'}
-                  onChange={(e) => {
-                    const enabled = e.target.checked;
-                    updateSettingsMutation.mutate({
-                      projectId: project.id,
-                      enableCleanup: enabled ? 'yes' : 'no',
-                    });
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
+              <div className="flex items-center gap-3 ml-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCleanupPreview(true)}
+                  disabled={!completedPages.length}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Preview Cleanup
+                </Button>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={project.enableCleanup === 'yes'}
+                    onChange={(e) => {
+                      const enabled = e.target.checked;
+                      updateSettingsMutation.mutate({
+                        projectId: project.id,
+                        enableCleanup: enabled ? 'yes' : 'no',
+                      });
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -892,6 +910,65 @@ export default function ProjectDetail() {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 No preview available
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cleanup Preview Modal */}
+      <Dialog open={showCleanupPreview} onOpenChange={setShowCleanupPreview}>
+        <DialogContent className="w-screen max-w-none h-[95vh] !left-0 !translate-x-0 !top-1/2 !-translate-y-1/2">
+          <DialogHeader>
+            <DialogTitle>Cleanup Preview - Before & After</DialogTitle>
+            <DialogDescription>
+              {cleanupPreviewData?.hasPreview
+                ? `Sample from: ${cleanupPreviewData.filename} (Page ${cleanupPreviewData.pageNumber})`
+                : "Upload and process pages to see cleanup preview"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 h-[calc(95vh-120px)] overflow-hidden">
+            {isLoadingCleanupPreview ? (
+              <div className="col-span-2 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : cleanupPreviewData?.hasPreview ? (
+              <>
+                {/* Original Text */}
+                <div className="flex flex-col h-full">
+                  <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Original OCR Output</h3>
+                  <textarea
+                    readOnly
+                    value={cleanupPreviewData.originalText}
+                    className="flex-1 w-full p-4 border rounded-lg font-mono text-sm resize-none overflow-auto"
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      textAlign: 'justify',
+                      textJustify: 'inter-word',
+                      lineHeight: 'normal',
+                    }}
+                  />
+                </div>
+
+                {/* Cleaned Text */}
+                <div className="flex flex-col h-full">
+                  <h3 className="text-sm font-semibold mb-2 text-green-600">After Cleanup</h3>
+                  <textarea
+                    readOnly
+                    value={cleanupPreviewData.cleanedText}
+                    className="flex-1 w-full p-4 border border-green-500/30 rounded-lg font-mono text-sm resize-none overflow-auto bg-green-50/50"
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      textAlign: 'justify',
+                      textJustify: 'inter-word',
+                      lineHeight: 'normal',
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="col-span-2 flex items-center justify-center text-muted-foreground">
+                {cleanupPreviewData?.message || "No preview available"}
               </div>
             )}
           </div>
