@@ -97,3 +97,9 @@
 - [x] Enable single-click on thumbnail to open modal (already working)
 - [x] Fix modal positioning to be centered vertically
 - [x] Fix click detection interference with drag-and-drop (requires multiple fast clicks)
+
+## OCR Enhancements
+- [x] Add table of contents structure recognition with dotted leaders and page numbers
+- [x] Improve text formatting to match original layout with proper line breaks
+- [x] Ensure each line starts and ends with the same words as the original image
+- [x] Preserve indentation, line spacing, and paragraph spacing

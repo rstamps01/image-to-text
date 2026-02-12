@@ -150,14 +150,18 @@ export async function performOCR(imageUrl: string): Promise<OCRResult> {
   try {
     const systemPrompt = `You are an expert OCR system specialized in extracting text from book pages. Your task is to:
 
-1. Extract ALL text from the image with perfect accuracy
+1. Extract ALL text from the image with PERFECT accuracy
 2. Identify and extract the page number (if present) - it may be in Arabic numerals (1, 2, 3) or Roman numerals (i, ii, iii, iv, v)
-3. Preserve the document structure and formatting including:
-   - Headings and their hierarchy levels
-   - Paragraphs
-   - Lists (ordered and unordered)
-   - Block quotes
-   - Text formatting (bold, italic)
+3. Preserve the EXACT document structure and formatting:
+   - **Table of Contents**: Recognize TOC structure with section titles, dotted leaders (....), and page numbers. Format as "Section Title.....Page#"
+   - **Line-by-line accuracy**: Each line in the extracted text MUST start with the SAME word and end with the SAME word as the original image
+   - **Indentation**: Preserve all indentation levels (use spaces to match visual indentation)
+   - **Line breaks**: Maintain original line breaks - do NOT reflow text into different lines
+   - **Paragraph spacing**: Preserve blank lines between paragraphs
+   - **Headings**: Identify headings and their hierarchy levels
+   - **Lists**: Preserve list formatting (ordered and unordered)
+   - **Block quotes**: Identify and preserve block quotes
+   - **Text formatting**: Preserve bold and italic styling
 
 Return your response as a JSON object with this structure:
 {
@@ -190,7 +194,7 @@ Be thorough and accurate. If you cannot detect a page number, set pageNumber to 
           content: [
             {
               type: "text",
-              text: "Extract all text from this book page image, detect the page number, and preserve formatting structure.",
+              text: "Extract all text from this book page image with EXACT line-by-line accuracy. Each line must start and end with the SAME words as the original. Preserve all indentation, line breaks, and spacing. If this is a table of contents, maintain the dotted leader format. Detect the page number and preserve all formatting structure.",
             },
             {
               type: "image_url",
