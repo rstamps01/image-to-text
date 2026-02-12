@@ -12,6 +12,7 @@ interface SortablePageCardProps {
     pageNumber: number | null;
     extractedText: string | null;
     errorMessage: string | null;
+    confidenceScore: number | null;
   };
   onPreview: () => void;
   onRetry: () => void;
@@ -130,6 +131,23 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
           <p className="text-xs text-muted-foreground">
             Page {page.pageNumber}
           </p>
+        )}
+        {page.status === "completed" && page.confidenceScore !== null && (
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${
+                  page.confidenceScore >= 90 ? "bg-green-500" :
+                  page.confidenceScore >= 70 ? "bg-yellow-500" :
+                  "bg-red-500"
+                }`}
+                style={{ width: `${page.confidenceScore}%` }}
+              />
+            </div>
+            <span className="text-xs font-medium text-muted-foreground">
+              {page.confidenceScore}%
+            </span>
+          </div>
         )}
         {page.errorMessage && (
           <p className="text-xs text-destructive mt-1">{page.errorMessage}</p>

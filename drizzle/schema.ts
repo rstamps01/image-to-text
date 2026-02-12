@@ -65,6 +65,8 @@ export const pages = mysqlTable("pages", {
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
   /** Extracted text content from OCR */
   extractedText: text("extractedText"),
+  /** OCR confidence score (0-100) indicating the reliability of the extracted text */
+  confidenceScore: int("confidenceScore"),
   /** Structured formatting information (paragraphs, headings, lists, etc.) */
   formattingData: json("formattingData"),
   /** Error message if OCR failed */

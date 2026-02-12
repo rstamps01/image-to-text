@@ -211,6 +211,7 @@ export const appRouter = router({
             extractedText: ocrResult.extractedText,
             detectedPageNumber: ocrResult.detectedPageNumber,
             formattingData: ocrResult.formattingData as any,
+            confidenceScore: Math.round(ocrResult.confidence * 100), // Convert 0-1 to 0-100
             status: "completed",
           });
 

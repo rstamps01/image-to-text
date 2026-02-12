@@ -128,6 +128,7 @@ Return your response as a JSON object with this structure:
 {
   "pageNumber": "detected page number or null if not found",
   "text": "complete extracted text",
+  "confidence": 0-100 (integer representing your confidence in the OCR accuracy),
   "blocks": [
     {
       "type": "heading|paragraph|list|quote",
@@ -182,6 +183,12 @@ Be thorough and accurate. If you cannot detect a page number, set pageNumber to 
                 type: "string",
                 description: "Complete extracted text from the page",
               },
+              confidence: {
+                type: "integer",
+                description: "Confidence score (0-100) indicating OCR accuracy",
+                minimum: 0,
+                maximum: 100,
+              },
               blocks: {
                 type: "array",
                 description: "Structured formatting blocks",
@@ -222,7 +229,7 @@ Be thorough and accurate. If you cannot detect a page number, set pageNumber to 
                 },
               },
             },
-            required: ["pageNumber", "text", "blocks"],
+            required: ["pageNumber", "text", "confidence", "blocks"],
             additionalProperties: false,
           },
         },
@@ -256,7 +263,7 @@ Be thorough and accurate. If you cannot detect a page number, set pageNumber to 
       formattingData: {
         blocks: parsed.blocks,
       },
-      confidence: 0.95, // High confidence with vision LLM
+      confidence: parsed.confidence / 100, // Convert 0-100 to 0-1
     };
   } catch (error) {
     console.error("[OCR] Error performing OCR:", error);

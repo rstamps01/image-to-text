@@ -67,3 +67,4 @@
 - [x] Add text preview and editing to modal with side-by-side image and text view
 - [x] Add export preview showing first 3 pages before full document generation
 - [x] Add drag-and-drop page reordering with visual feedback and sort order updates
+- [x] Add OCR confidence scores to completed pages with percentage display
