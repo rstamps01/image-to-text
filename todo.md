@@ -137,3 +137,8 @@
 
 ## Bug Fixes (Current)
 - [x] Fix Preview Cleanup modal displaying as narrow left panel instead of full-screen
+
+## Cleanup Function Enhancement
+- [x] Investigate why cleanup preview shows no differences between original and cleaned text
+- [x] Enhance cleanup logic to handle more OCR artifacts (extra spaces, line breaks, formatting issues)
+- [x] Test cleanup function with various text samples to verify effectiveness
