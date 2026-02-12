@@ -104,3 +104,4 @@
 - [x] Ensure each line starts and ends with the same words as the original image
 - [x] Preserve indentation, line spacing, and paragraph spacing
 - [x] Format extracted text with proper indentation and justification to match original image
+- [x] Fix PDF export error: WinAnsi encoding cannot handle newline characters

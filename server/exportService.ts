@@ -135,18 +135,44 @@ export async function exportToPDF(pages: Page[]): Promise<Buffer> {
           currentFont = italicFont;
         }
 
-        // Word wrap text
-        const words = block.content.split(" ");
-        let line = "";
+        // Split content by newlines first, then word wrap each line
+        const contentLines = block.content.split(/\r?\n/);
+        
+        for (const contentLine of contentLines) {
+          // Word wrap text for each line
+          const words = contentLine.split(" ");
+          let line = "";
 
-        for (const word of words) {
-          const testLine = line + (line ? " " : "") + word;
-          const textWidth = currentFont.widthOfTextAtSize(testLine, fontSize);
+          for (const word of words) {
+            const testLine = line + (line ? " " : "") + word;
+            const textWidth = currentFont.widthOfTextAtSize(testLine, fontSize);
 
-          if (textWidth > maxWidth && line) {
-            // Draw current line
+            if (textWidth > maxWidth && line) {
+              // Draw current line
+              if (yPosition < margin + fontSize) {
+                // Need new page
+                page = pdfDoc.addPage([pageWidth, pageHeight]);
+                yPosition = pageHeight - margin;
+              }
+
+              page.drawText(line, {
+                x: margin,
+                y: yPosition,
+                size: fontSize,
+                font: currentFont,
+                color: rgb(0, 0, 0),
+              });
+
+              yPosition -= fontSize + 5;
+              line = word;
+            } else {
+              line = testLine;
+            }
+          }
+
+          // Draw remaining text
+          if (line) {
             if (yPosition < margin + fontSize) {
-              // Need new page
               page = pdfDoc.addPage([pageWidth, pageHeight]);
               yPosition = pageHeight - margin;
             }
@@ -160,28 +186,7 @@ export async function exportToPDF(pages: Page[]): Promise<Buffer> {
             });
 
             yPosition -= fontSize + 5;
-            line = word;
-          } else {
-            line = testLine;
           }
-        }
-
-        // Draw remaining text
-        if (line) {
-          if (yPosition < margin + fontSize) {
-            page = pdfDoc.addPage([pageWidth, pageHeight]);
-            yPosition = pageHeight - margin;
-          }
-
-          page.drawText(line, {
-            x: margin,
-            y: yPosition,
-            size: fontSize,
-            font: currentFont,
-            color: rgb(0, 0, 0),
-          });
-
-          yPosition -= fontSize + 5;
         }
 
         // Add spacing after block
