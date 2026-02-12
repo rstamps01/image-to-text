@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, XCircle, Clock, Search } from "lucide-react";
 
 interface SortablePageCardProps {
   page: {
@@ -95,6 +95,23 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
           className="w-full h-full object-cover pointer-events-none"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-elegant" />
+        
+        {/* Magnifying glass icon for completed pages */}
+        {page.status === "completed" && (
+          <div className="absolute top-2 right-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreview();
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg h-8 w-8 p-0"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
         
         {/* Retry button for failed pages */}
         {page.status === "failed" && (
