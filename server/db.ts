@@ -162,6 +162,9 @@ export async function createPage(data: InsertPage): Promise<Page> {
     throw new Error("Failed to retrieve created page");
   }
   
+  // Update project counts
+  await updateProjectPageCounts(data.projectId);
+  
   return created[0];
 }
 
@@ -214,4 +217,23 @@ export async function updatePageStatus(pageId: number, status: "pending" | "proc
   }
 
   await db.update(pages).set(updateData).where(eq(pages.id, pageId));
+  
+  // Update project counts
+  const page = await getPageById(pageId);
+  if (page) {
+    await updateProjectPageCounts(page.projectId);
+  }
+}
+
+export async function updateProjectPageCounts(projectId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const allPages = await db.select().from(pages).where(eq(pages.projectId, projectId));
+  const totalPages = allPages.length;
+  const processedPages = allPages.filter(p => p.status === "completed").length;
+
+  await db.update(projects).set({ totalPages, processedPages }).where(eq(projects.id, projectId));
 }

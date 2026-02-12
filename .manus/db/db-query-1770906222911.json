@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE projects p\nJOIN (\n  SELECT projectId, COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed\n  FROM pages\n  GROUP BY projectId\n) page_counts ON p.id = page_counts.projectId\nSET p.totalPages = page_counts.total, p.processedPages = page_counts.completed;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute \nUPDATE projects p\nJOIN (\n  SELECT projectId, COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed\n  FROM pages\n  GROUP BY projectId\n) page_counts ON p.id = page_counts.projectId\nSET p.totalPages = page_counts.total, p.processedPages = page_counts.completed;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 62
+}

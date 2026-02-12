@@ -59,3 +59,4 @@
 
 ## Bugs
 - [x] Fix pages stuck in pending state - OCR not triggering automatically
+- [x] Fix project cards showing 0 / 0 pages on home page

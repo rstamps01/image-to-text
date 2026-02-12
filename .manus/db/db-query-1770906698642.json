@@ -1,0 +1,18 @@
+{
+  "query": "SELECT p.id, p.userId, p.title, p.totalPages, p.processedPages, COUNT(pg.id) as actual_pages FROM projects p LEFT JOIN pages pg ON p.id = pg.projectId GROUP BY p.id HAVING actual_pages > 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute SELECT p.id, p.userId, p.title, p.totalPages, p.processedPages, COUNT(pg.id) as actual_pages FROM projects p LEFT JOIN pages pg ON p.id = pg.projectId GROUP BY p.id HAVING actual_pages > 0;",
+  "rows": [
+    {
+      "id": "7",
+      "userId": "1",
+      "title": "test1",
+      "totalPages": "32",
+      "processedPages": "0",
+      "actual_pages": "32"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\ttitle\ttotalPages\tprocessedPages\tactual_pages\n7\t1\ttest1\t32\t0\t32\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

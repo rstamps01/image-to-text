@@ -1,0 +1,15 @@
+{
+  "query": "SELECT projectId, COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM pages GROUP BY projectId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute SELECT projectId, COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM pages GROUP BY projectId;",
+  "rows": [
+    {
+      "projectId": "7",
+      "total": "32",
+      "completed": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "projectId\ttotal\tcompleted\n7\t32\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

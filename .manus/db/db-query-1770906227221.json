@@ -1,0 +1,80 @@
+{
+  "query": "SELECT p.id, p.title, p.totalPages, p.processedPages, (SELECT COUNT(*) FROM pages WHERE projectId = p.id) as actual_total FROM projects p LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute SELECT p.id, p.title, p.totalPages, p.processedPages, (SELECT COUNT(*) FROM pages WHERE projectId = p.id) as actual_total FROM projects p LIMIT 10;",
+  "rows": [
+    {
+      "id": "7",
+      "title": "test1",
+      "totalPages": "32",
+      "processedPages": "0",
+      "actual_total": "32"
+    },
+    {
+      "id": "1",
+      "title": "Test Book Project",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "2",
+      "title": "Test Project 1",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "3",
+      "title": "Test Project for Get",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "4",
+      "title": "Test Project for Status Update",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "6",
+      "title": "User 1 Project",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "8",
+      "title": "Test Book Project",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "9",
+      "title": "Test Project 1",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "10",
+      "title": "Test Project for Get",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    },
+    {
+      "id": "11",
+      "title": "Test Project for Status Update",
+      "totalPages": "0",
+      "processedPages": "0",
+      "actual_total": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\ttotalPages\tprocessedPages\tactual_total\n7\ttest1\t32\t0\t32\n1\tTest Book Project\t0\t0\t0\n2\tTest Project 1\t0\t0\t0\n3\tTest Project for Get\t0\t0\t0\n4\tTest Project for Status Update\t0\t0\t0\n6\tUser 1 Project\t0\t0\t0\n8\tTest Book Project\t0\t0\t0\n9\tTest Project 1\t0\t0\t0\n10\tTest Project for Get\t0\t0\t0\n11\tTest Project for Status Update\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
