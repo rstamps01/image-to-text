@@ -53,7 +53,9 @@ export default function ProjectDetail() {
   const [retryingPageId, setRetryingPageId] = useState<number | null>(null);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
   const [retryingProgress, setRetryingProgress] = useState({ current: 0, total: 0 });
-  const [previewImage, setPreviewImage] = useState<{ url: string; filename: string } | null>(null);
+  const [previewPage, setPreviewPage] = useState<{ id: number; url: string; filename: string; extractedText: string | null; status: string } | null>(null);
+  const [editedText, setEditedText] = useState<string>("");
+  const [isSavingText, setIsSavingText] = useState(false);
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -64,6 +66,7 @@ export default function ProjectDetail() {
   const exportMutation = trpc.export.generate.useMutation();
   const retryFailedMutation = trpc.pages.retryFailed.useMutation();
   const retrySingleMutation = trpc.pages.retrySingle.useMutation();
+  const updateTextMutation = trpc.pages.updateText.useMutation();
 
   const handleDelete = async () => {
     try {
@@ -513,7 +516,16 @@ export default function ProjectDetail() {
                   >
                     <div 
                       className="aspect-[3/4] relative cursor-pointer"
-                      onClick={() => setPreviewImage({ url: page.imageUrl, filename: page.filename })}
+                      onClick={() => {
+                        setPreviewPage({ 
+                          id: page.id, 
+                          url: page.imageUrl, 
+                          filename: page.filename,
+                          extractedText: page.extractedText,
+                          status: page.status
+                        });
+                        setEditedText(page.extractedText || "");
+                      }}
                     >
                       <img
                         src={page.imageUrl}
@@ -583,18 +595,74 @@ export default function ProjectDetail() {
         </Card>
       </div>
 
-      {/* Image Preview Modal */}
-      <Dialog open={previewImage !== null} onOpenChange={(open) => !open && setPreviewImage(null)}>
-        <DialogContent className="max-w-4xl w-full">
+      {/* Image Preview Modal with Text Editor */}
+      <Dialog open={previewPage !== null} onOpenChange={(open) => !open && setPreviewPage(null)}>
+        <DialogContent className="max-w-7xl w-full max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>{previewImage?.filename}</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{previewPage?.filename}</span>
+              {previewPage?.status === "completed" && (
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    if (!previewPage) return;
+                    setIsSavingText(true);
+                    try {
+                      await updateTextMutation.mutateAsync({
+                        pageId: previewPage.id,
+                        extractedText: editedText,
+                      });
+                      toast.success("Text saved successfully");
+                      await refetch();
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Failed to save text");
+                    } finally {
+                      setIsSavingText(false);
+                    }
+                  }}
+                  disabled={isSavingText || editedText === previewPage?.extractedText}
+                >
+                  {isSavingText ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              )}
+            </DialogTitle>
           </DialogHeader>
-          <div className="relative w-full max-h-[70vh] overflow-auto">
-            <img
-              src={previewImage?.url}
-              alt={previewImage?.filename}
-              className="w-full h-auto"
-            />
+          <div className="grid md:grid-cols-2 gap-4 max-h-[70vh]">
+            {/* Image Preview */}
+            <div className="relative overflow-auto border rounded-lg">
+              <img
+                src={previewPage?.url}
+                alt={previewPage?.filename}
+                className="w-full h-auto"
+              />
+            </div>
+            {/* Text Editor */}
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium mb-2">Extracted Text</h3>
+              {previewPage?.status === "completed" ? (
+                <textarea
+                  value={editedText}
+                  onChange={(e) => setEditedText(e.target.value)}
+                  className="flex-1 w-full p-3 border rounded-lg resize-none font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="No text extracted"
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center border rounded-lg bg-muted/50">
+                  <p className="text-muted-foreground text-sm">
+                    {previewPage?.status === "processing" ? "OCR processing in progress..." :
+                     previewPage?.status === "failed" ? "OCR failed for this page" :
+                     "No text available yet"}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

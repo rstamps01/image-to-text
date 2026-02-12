@@ -421,6 +421,32 @@ export const appRouter = router({
           throw new Error(errorMessage);
         }
       }),
+
+    // Update extracted text for a page
+    updateText: protectedProcedure
+      .input(
+        z.object({
+          pageId: z.number(),
+          extractedText: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const page = await getPageById(input.pageId);
+        if (!page) {
+          throw new Error("Page not found");
+        }
+
+        const project = await getProjectById(page.projectId);
+        if (!project || project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        await updatePage(input.pageId, {
+          extractedText: input.extractedText,
+        });
+
+        return { success: true };
+      }),
   }),
 
   export: router({
