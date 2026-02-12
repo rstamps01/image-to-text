@@ -918,7 +918,10 @@ export default function ProjectDetail() {
 
       {/* Cleanup Preview Modal */}
       <Dialog open={showCleanupPreview} onOpenChange={setShowCleanupPreview}>
-        <DialogContent className="w-screen max-w-none h-screen !left-0 !translate-x-0 !top-0 !translate-y-0 !rounded-none">
+        <DialogContent 
+          className="w-screen max-w-none h-screen !rounded-none p-6"
+          style={{ position: 'fixed', left: 0, top: 0, transform: 'none', width: '100vw', height: '100vh' }}
+        >
           <DialogHeader>
             <DialogTitle>Cleanup Preview - Before & After</DialogTitle>
             <DialogDescription>

@@ -128,3 +128,4 @@
 
 ## Modal Expansion
 - [x] Expand cleanup preview modal to use full browser window dimensions
+- [x] Fix cleanup preview modal to fill entire browser width (currently showing background page)
