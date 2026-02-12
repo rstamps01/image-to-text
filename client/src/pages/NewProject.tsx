@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Upload, X, FileImage, Loader2, ArrowLeft } from "lucide-react";
@@ -27,6 +28,7 @@ export default function NewProject() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [enableCleanup, setEnableCleanup] = useState(false);
 
   const createProjectMutation = trpc.projects.create.useMutation();
   const uploadPageMutation = trpc.pages.upload.useMutation();
@@ -101,6 +103,7 @@ export default function NewProject() {
       const project = await createProjectMutation.mutateAsync({
         title: title.trim(),
         description: description.trim() || undefined,
+        enableCleanup,
       });
 
       toast.success("Project created successfully");
@@ -239,6 +242,22 @@ export default function NewProject() {
                   onChange={e => setDescription(e.target.value)}
                   disabled={isCreating}
                   rows={3}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/50">
+                <div className="space-y-0.5">
+                  <Label htmlFor="cleanup-toggle" className="text-base cursor-pointer">
+                    Enable Text Cleanup
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically remove duplicate spaces, stray punctuation, and formatting artifacts during OCR processing
+                  </p>
+                </div>
+                <Switch
+                  id="cleanup-toggle"
+                  checked={enableCleanup}
+                  onCheckedChange={setEnableCleanup}
+                  disabled={isCreating}
                 />
               </div>
             </CardContent>

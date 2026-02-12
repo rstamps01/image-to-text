@@ -40,6 +40,7 @@ export const appRouter = router({
         z.object({
           title: z.string().min(1).max(255),
           description: z.string().optional(),
+          enableCleanup: z.boolean().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -47,6 +48,7 @@ export const appRouter = router({
           userId: ctx.user.id,
           title: input.title,
           description: input.description,
+          enableCleanup: (input.enableCleanup ?? false) ? "yes" : "no",
         });
         return project;
       }),

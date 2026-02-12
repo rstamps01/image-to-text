@@ -129,3 +129,8 @@
 ## Modal Expansion
 - [x] Expand cleanup preview modal to use full browser window dimensions
 - [x] Fix cleanup preview modal to fill entire browser width (currently showing background page)
+
+## Add Cleanup Toggle to Project Creation
+- [x] Add cleanup toggle to project creation form UI
+- [x] Update backend createProject to accept enableCleanup parameter
+- [x] Test cleanup applies during initial page upload when enabled at creation
