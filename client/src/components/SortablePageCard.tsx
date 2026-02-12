@@ -77,11 +77,10 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="relative group rounded-lg border border-border overflow-hidden bg-card hover:shadow-elegant transition-elegant cursor-grab active:cursor-grabbing"
+      className="relative group rounded-lg border border-border overflow-hidden bg-card hover:shadow-elegant transition-elegant"
     >
       <div 
-        className="aspect-[3/4] relative"
+        className="aspect-[3/4] relative cursor-pointer"
         onClick={(e) => {
           // Only trigger preview if not dragging
           if (!isDragging) {
@@ -142,7 +141,7 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
         )}
       </div>
       
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-2 cursor-grab active:cursor-grabbing" {...listeners}>
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium truncate">{page.filename}</p>
           {getStatusBadge()}

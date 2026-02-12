@@ -95,3 +95,5 @@
 - [x] Fix magnifying glass icon click event not opening modal
 - [x] Fix modal to dynamically expand to full browser width
 - [x] Enable single-click on thumbnail to open modal (already working)
+- [x] Fix modal positioning to be centered vertically
+- [x] Fix click detection interference with drag-and-drop (requires multiple fast clicks)
