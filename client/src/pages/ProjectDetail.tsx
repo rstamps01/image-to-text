@@ -1,0 +1,333 @@
+import { useState } from "react";
+import { useRoute, useLocation, Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Loader2,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+export default function ProjectDetail() {
+  const [, params] = useRoute("/projects/:id");
+  const [, setLocation] = useLocation();
+  const projectId = params?.id ? parseInt(params.id) : 0;
+
+  const [exportFormat, setExportFormat] = useState<"md" | "txt" | "pdf" | "docx">("pdf");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const { data, isLoading, refetch } = trpc.projects.get.useQuery(
+    { projectId },
+    { enabled: projectId > 0 }
+  );
+
+  const deleteProjectMutation = trpc.projects.delete.useMutation();
+  const exportMutation = trpc.export.generate.useMutation();
+
+  const handleDelete = async () => {
+    try {
+      await deleteProjectMutation.mutateAsync({ projectId });
+      toast.success("Project deleted successfully");
+      setLocation("/");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete project");
+    }
+  };
+
+  const handleExport = async () => {
+    if (!data?.project) return;
+
+    setIsExporting(true);
+    try {
+      const result = await exportMutation.mutateAsync({
+        projectId,
+        format: exportFormat,
+      });
+
+      // Convert base64 to blob and download
+      const byteCharacters = atob(result.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: result.mimeType });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Document exported successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to export document");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!data?.project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Project Not Found</CardTitle>
+            <CardDescription>The project you're looking for doesn't exist.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/">Back to Projects</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const { project, pages } = data;
+  const completedPages = pages.filter(p => p.status === "completed");
+  const failedPages = pages.filter(p => p.status === "failed");
+  const processingPages = pages.filter(p => p.status === "processing");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container py-12 max-w-6xl">
+        {/* Header */}
+        <div className="mb-8">
+          <Button variant="ghost" asChild className="mb-4">
+            <Link href="/">
+              <ArrowLeft className="mr-2 w-4 h-4" />
+              Back to Projects
+            </Link>
+          </Button>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
+              {project.description && (
+                <p className="text-muted-foreground">{project.description}</p>
+              )}
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="mr-2 w-4 h-4" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this project? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <Card className="shadow-elegant">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Pages
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pages.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                Completed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{completedPages.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Processing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{processingPages.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-red-600" />
+                Failed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{failedPages.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Export Section */}
+        {completedPages.length > 0 && (
+          <Card className="shadow-elegant mb-8">
+            <CardHeader>
+              <CardTitle>Export Document</CardTitle>
+              <CardDescription>
+                Download your converted document in your preferred format
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1 max-w-xs space-y-2">
+                  <label className="text-sm font-medium">Format</label>
+                  <Select value={exportFormat} onValueChange={(v: any) => setExportFormat(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">PDF (.pdf)</SelectItem>
+                      <SelectItem value="docx">Word (.docx)</SelectItem>
+                      <SelectItem value="md">Markdown (.md)</SelectItem>
+                      <SelectItem value="txt">Plain Text (.txt)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  size="lg"
+                  className="shadow-elegant"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 w-5 h-5" />
+                      Export
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pages Grid */}
+        <Card className="shadow-elegant">
+          <CardHeader>
+            <CardTitle>Pages ({pages.length})</CardTitle>
+            <CardDescription>
+              Pages are automatically ordered by detected page numbers
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pages.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No pages uploaded yet</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {pages.map(page => (
+                  <div
+                    key={page.id}
+                    className="relative group rounded-lg border border-border overflow-hidden bg-card hover:shadow-elegant transition-elegant"
+                  >
+                    <div className="aspect-[3/4] relative">
+                      <img
+                        src={page.imageUrl}
+                        alt={page.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-elegant" />
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-medium truncate">{page.filename}</span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            page.status === "completed"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : page.status === "failed"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              : page.status === "processing"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                          }`}
+                        >
+                          {page.status}
+                        </span>
+                      </div>
+                      {page.detectedPageNumber && (
+                        <p className="text-xs text-muted-foreground">
+                          Page {page.detectedPageNumber}
+                        </p>
+                      )}
+                      {page.errorMessage && (
+                        <p className="text-xs text-destructive mt-1">{page.errorMessage}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,53 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Projects table - represents a document conversion project
+ * Each project contains multiple book page images to be converted
+ */
+export const projects = mysqlTable("projects", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["uploading", "processing", "completed", "failed"]).default("uploading").notNull(),
+  totalPages: int("totalPages").default(0).notNull(),
+  processedPages: int("processedPages").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = typeof projects.$inferInsert;
+
+/**
+ * Pages table - represents individual book page images and their OCR results
+ * Each page belongs to a project and contains the extracted text and metadata
+ */
+export const pages = mysqlTable("pages", {
+  id: int("id").autoincrement().primaryKey(),
+  projectId: int("projectId").notNull(),
+  /** Original filename of the uploaded image */
+  filename: varchar("filename", { length: 255 }).notNull(),
+  /** S3 storage key for the uploaded image */
+  imageKey: varchar("imageKey", { length: 512 }).notNull(),
+  /** Public URL to access the image */
+  imageUrl: text("imageUrl").notNull(),
+  /** Detected page number (can be Arabic numeral, Roman numeral, or null if not detected) */
+  detectedPageNumber: varchar("detectedPageNumber", { length: 50 }),
+  /** Numeric sort order based on detected page number */
+  sortOrder: int("sortOrder"),
+  /** OCR processing status */
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  /** Extracted text content from OCR */
+  extractedText: text("extractedText"),
+  /** Structured formatting information (paragraphs, headings, lists, etc.) */
+  formattingData: json("formattingData"),
+  /** Error message if OCR failed */
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Page = typeof pages.$inferSelect;
+export type InsertPage = typeof pages.$inferInsert;
