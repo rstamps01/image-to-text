@@ -82,3 +82,6 @@
 - [x] Implement synchronized scrolling between image and text
 - [x] Match text formatting to original layout (font size, line spacing, paragraph breaks)
 - [x] Add visual alignment guides for easier comparison
+
+## Current Issues
+- [x] Debug and fix OCR processing error: "500 Internal Server Error - received bad response from upstream"

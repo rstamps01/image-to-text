@@ -108,8 +108,43 @@ export function extractPageNumber(text: string): { pageNumber: string | null; so
 }
 
 /**
+ * Retry helper with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // Check if it's a 500 error that we should retry
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const is500Error = errorMessage.includes('500') || errorMessage.includes('Internal Server Error');
+      
+      if (!is500Error || attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Calculate delay with exponential backoff
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(`[OCR] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms due to upstream error`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
  * Performs OCR on a book page image using vision LLM
  * Extracts text, detects page numbers, and preserves formatting
+ * Includes automatic retry logic for temporary API failures
  */
 export async function performOCR(imageUrl: string): Promise<OCRResult> {
   try {
@@ -144,7 +179,7 @@ Return your response as a JSON object with this structure:
 
 Be thorough and accurate. If you cannot detect a page number, set pageNumber to null.`;
 
-    const response = await invokeLLM({
+    const response = await retryWithBackoff(() => invokeLLM({
       messages: [
         {
           role: "system",
@@ -234,7 +269,7 @@ Be thorough and accurate. If you cannot detect a page number, set pageNumber to 
           },
         },
       },
-    });
+    }));
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
