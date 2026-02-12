@@ -54,3 +54,4 @@
 
 ## New Features
 - [x] Add real-time progress bars for OCR processing
+- [x] Add 'Retry All Failed' button to reprocess failed pages

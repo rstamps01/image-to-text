@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ export default function ProjectDetail() {
 
   const [exportFormat, setExportFormat] = useState<"md" | "txt" | "pdf" | "docx">("pdf");
   const [isExporting, setIsExporting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -48,6 +50,7 @@ export default function ProjectDetail() {
 
   const deleteProjectMutation = trpc.projects.delete.useMutation();
   const exportMutation = trpc.export.generate.useMutation();
+  const retryFailedMutation = trpc.pages.retryFailed.useMutation();
 
   const handleDelete = async () => {
     try {
@@ -93,6 +96,29 @@ export default function ProjectDetail() {
       toast.error(error instanceof Error ? error.message : "Failed to export document");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleRetryFailed = async () => {
+    if (!data?.project) return;
+
+    setIsRetrying(true);
+    try {
+      const result = await retryFailedMutation.mutateAsync({ projectId });
+
+      if (result.retriedCount === 0) {
+        toast.info("No failed pages to retry");
+      } else {
+        toast.success(
+          `Retried ${result.retriedCount} pages. ${result.successCount} succeeded.`
+        );
+        // Refresh the project data to show updated statuses
+        await refetch();
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to retry pages");
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -217,6 +243,42 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Retry Failed Pages Button */}
+        {failedPages.length > 0 && (
+          <Card className="shadow-elegant mb-8 border-destructive/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-destructive mb-1">
+                    {failedPages.length} {failedPages.length === 1 ? "page" : "pages"} failed
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Retry OCR processing for all failed pages at once
+                  </p>
+                </div>
+                <Button
+                  onClick={handleRetryFailed}
+                  disabled={isRetrying}
+                  variant="outline"
+                  className="border-destructive/30 hover:bg-destructive/10"
+                >
+                  {isRetrying ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Retrying...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 w-4 h-4" />
+                      Retry All Failed
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Export Section */}
         {completedPages.length > 0 && (

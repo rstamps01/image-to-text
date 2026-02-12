@@ -274,6 +274,71 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Retry all failed pages in a project
+    retryFailed: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const project = await getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        const pages = await getPagesByProjectId(input.projectId);
+        const failedPages = pages.filter(p => p.status === "failed");
+
+        if (failedPages.length === 0) {
+          return { success: true, retriedCount: 0, results: [] };
+        }
+
+        const results: Array<{ pageId: number; success: boolean; error?: string }> = [];
+
+        for (const page of failedPages) {
+          try {
+            // Reset status to processing
+            await updatePageStatus(page.id, "processing");
+
+            // Perform OCR
+            const ocrResult = await performOCR(page.imageUrl);
+
+            // Update page with OCR results
+            await updatePage(page.id, {
+              extractedText: ocrResult.extractedText,
+              detectedPageNumber: ocrResult.detectedPageNumber,
+              formattingData: ocrResult.formattingData as any,
+              status: "completed",
+              errorMessage: null,
+            });
+
+            results.push({ pageId: page.id, success: true });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "OCR processing failed";
+            await updatePage(page.id, {
+              status: "failed",
+              errorMessage,
+            });
+            results.push({ pageId: page.id, success: false, error: errorMessage });
+          }
+        }
+
+        // Update project processed pages count
+        const successCount = results.filter(r => r.success).length;
+        if (successCount > 0) {
+          await updateProject(input.projectId, {
+            processedPages: project.processedPages + successCount,
+          });
+        }
+
+        return {
+          success: true,
+          retriedCount: failedPages.length,
+          successCount,
+          results,
+        };
+      }),
   }),
 
   export: router({
