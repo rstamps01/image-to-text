@@ -799,8 +799,8 @@ export default function ProjectDetail() {
                     <textarea
                       value={editedText}
                       onChange={(e) => setEditedText(e.target.value)}
-                      className="w-full h-full p-3 resize-none font-serif text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary"
-                      style={{ minHeight: '100%' }}
+                      className="w-full h-full p-3 resize-none font-mono text-sm leading-normal focus:outline-none focus:ring-2 focus:ring-primary"
+                      style={{ minHeight: '100%', whiteSpace: 'pre-wrap', textAlign: 'justify', textJustify: 'inter-word' }}
                       placeholder="No text extracted"
                     />
                   </div>

@@ -103,3 +103,4 @@
 - [x] Improve text formatting to match original layout with proper line breaks
 - [x] Ensure each line starts and ends with the same words as the original image
 - [x] Preserve indentation, line spacing, and paragraph spacing
+- [x] Format extracted text with proper indentation and justification to match original image
