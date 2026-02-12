@@ -76,3 +76,9 @@
 - [x] Create UI for uploading additional pages to existing projects
 - [x] Display validation warnings for uncertain placements
 - [x] Add visual indicators on pages requiring user validation
+
+## New Feature: Enhanced Side-by-Side Comparison View
+- [x] Add magnified readable image view with zoom controls
+- [x] Implement synchronized scrolling between image and text
+- [x] Match text formatting to original layout (font size, line spacing, paragraph breaks)
+- [x] Add visual alignment guides for easier comparison

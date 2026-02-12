@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import {
   DndContext,
@@ -78,6 +78,9 @@ export default function ProjectDetail() {
   const [previewFormat, setPreviewFormat] = useState<"md" | "txt">("md");
   const [localPages, setLocalPages] = useState<any[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [imageZoom, setImageZoom] = useState(100);
+  const imageScrollRef = useRef<HTMLDivElement>(null);
+  const textScrollRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -733,34 +736,84 @@ export default function ProjectDetail() {
               )}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-4 max-h-[70vh]">
-            {/* Image Preview */}
-            <div className="relative overflow-auto border rounded-lg">
-              <img
-                src={previewPage?.url}
-                alt={previewPage?.filename}
-                className="w-full h-auto"
-              />
+          <div className="space-y-4">
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-4 justify-center">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImageZoom(Math.max(50, imageZoom - 10))}
+              >
+                <span className="text-lg">-</span>
+              </Button>
+              <span className="text-sm font-medium min-w-[60px] text-center">{imageZoom}%</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImageZoom(Math.min(200, imageZoom + 10))}
+              >
+                <span className="text-lg">+</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImageZoom(100)}
+              >
+                Reset
+              </Button>
             </div>
-            {/* Text Editor */}
-            <div className="flex flex-col">
-              <h3 className="text-sm font-medium mb-2">Extracted Text</h3>
-              {previewPage?.status === "completed" ? (
-                <textarea
-                  value={editedText}
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="flex-1 w-full p-3 border rounded-lg resize-none font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="No text extracted"
+            
+            <div className="grid md:grid-cols-2 gap-4 max-h-[70vh]">
+              {/* Image Preview with Synchronized Scroll */}
+              <div 
+                ref={imageScrollRef}
+                className="relative overflow-auto border rounded-lg"
+                onScroll={(e) => {
+                  if (textScrollRef.current) {
+                    const scrollPercentage = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
+                    textScrollRef.current.scrollTop = scrollPercentage * (textScrollRef.current.scrollHeight - textScrollRef.current.clientHeight);
+                  }
+                }}
+              >
+                <img
+                  src={previewPage?.url}
+                  alt={previewPage?.filename}
+                  style={{ width: `${imageZoom}%`, height: 'auto' }}
+                  className="block"
                 />
-              ) : (
-                <div className="flex-1 flex items-center justify-center border rounded-lg bg-muted/50">
-                  <p className="text-muted-foreground text-sm">
-                    {previewPage?.status === "processing" ? "OCR processing in progress..." :
-                     previewPage?.status === "failed" ? "OCR failed for this page" :
-                     "No text available yet"}
-                  </p>
-                </div>
-              )}
+              </div>
+              {/* Text Editor with Matched Formatting */}
+              <div className="flex flex-col">
+                <h3 className="text-sm font-medium mb-2">Extracted Text</h3>
+                {previewPage?.status === "completed" ? (
+                  <div
+                    ref={textScrollRef}
+                    className="flex-1 overflow-auto border rounded-lg"
+                    onScroll={(e) => {
+                      if (imageScrollRef.current) {
+                        const scrollPercentage = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
+                        imageScrollRef.current.scrollTop = scrollPercentage * (imageScrollRef.current.scrollHeight - imageScrollRef.current.clientHeight);
+                      }
+                    }}
+                  >
+                    <textarea
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      className="w-full h-full p-3 resize-none font-serif text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary"
+                      style={{ minHeight: '100%' }}
+                      placeholder="No text extracted"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center border rounded-lg bg-muted/50">
+                    <p className="text-muted-foreground text-sm">
+                      {previewPage?.status === "processing" ? "OCR processing in progress..." :
+                       previewPage?.status === "failed" ? "OCR failed for this page" :
+                       "No text available yet"}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </DialogContent>
