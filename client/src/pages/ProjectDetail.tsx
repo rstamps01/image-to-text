@@ -34,6 +34,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/projects/:id");
@@ -47,6 +53,7 @@ export default function ProjectDetail() {
   const [retryingPageId, setRetryingPageId] = useState<number | null>(null);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
   const [retryingProgress, setRetryingProgress] = useState({ current: 0, total: 0 });
+  const [previewImage, setPreviewImage] = useState<{ url: string; filename: string } | null>(null);
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -504,7 +511,10 @@ export default function ProjectDetail() {
                     key={page.id}
                     className="relative group rounded-lg border border-border overflow-hidden bg-card hover:shadow-elegant transition-elegant"
                   >
-                    <div className="aspect-[3/4] relative">
+                    <div 
+                      className="aspect-[3/4] relative cursor-pointer"
+                      onClick={() => setPreviewImage({ url: page.imageUrl, filename: page.filename })}
+                    >
                       <img
                         src={page.imageUrl}
                         alt={page.filename}
@@ -518,7 +528,10 @@ export default function ProjectDetail() {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => handleRetrySingle(page.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRetrySingle(page.id);
+                            }}
                             disabled={retryingPageId === page.id}
                             className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg"
                           >
@@ -569,6 +582,22 @@ export default function ProjectDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Image Preview Modal */}
+      <Dialog open={previewImage !== null} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>{previewImage?.filename}</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full max-h-[70vh] overflow-auto">
+            <img
+              src={previewImage?.url}
+              alt={previewImage?.filename}
+              className="w-full h-auto"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
