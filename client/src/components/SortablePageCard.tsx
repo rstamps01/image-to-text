@@ -98,15 +98,16 @@ export function SortablePageCard({ page, onPreview, onRetry, isRetrying }: Sorta
         
         {/* Magnifying glass icon for completed pages */}
         {page.status === "completed" && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 z-10">
             <Button
               size="sm"
               variant="secondary"
               onClick={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 onPreview();
               }}
-              className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg h-8 w-8 p-0"
+              className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg h-8 w-8 p-0 pointer-events-auto"
             >
               <Search className="w-4 h-4" />
             </Button>

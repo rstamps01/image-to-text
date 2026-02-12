@@ -90,3 +90,6 @@
 - [x] Expand side-by-side comparison modal to use full browser window
 - [x] Expand modal to full viewport width for wide side-by-side viewing
 - [x] Add magnifying glass icon button for single-click modal access
+
+## Bug Fixes (Current)
+- [x] Fix magnifying glass icon click event not opening modal
