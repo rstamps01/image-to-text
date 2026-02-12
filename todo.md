@@ -116,3 +116,6 @@
 
 ## Bug Fixes (Urgent)
 - [x] Fix invalid hook call error in updateSettings mutation (trpc.useUtils() called in callback)
+
+## Bug Fixes (Current)
+- [x] Fix cleanup toggle switch requiring browser refresh to update position

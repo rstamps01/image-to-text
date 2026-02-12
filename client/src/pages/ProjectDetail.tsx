@@ -99,6 +99,7 @@ export default function ProjectDetail() {
   const updateSettingsMutation = trpc.projects.updateSettings.useMutation({
     onSuccess: () => {
       // Refresh project data to show updated settings
+      utils.projects.get.invalidate({ projectId });
       utils.projects.list.invalidate();
     },
   });
