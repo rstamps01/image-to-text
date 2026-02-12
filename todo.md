@@ -61,3 +61,4 @@
 - [x] Fix pages stuck in pending state - OCR not triggering automatically
 - [x] Fix project cards showing 0 / 0 pages on home page
 - [x] Add bulk deletion feature for projects with checkboxes
+- [x] Fix individual project checkboxes not responding to clicks

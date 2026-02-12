@@ -223,12 +223,13 @@ export default function Home() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleToggleProject(project.id);
                   }}
                 >
                   <Checkbox
                     checked={selectedProjects.has(project.id)}
-                    onCheckedChange={() => handleToggleProject(project.id)}
+                    onCheckedChange={(checked) => {
+                      handleToggleProject(project.id);
+                    }}
                     className="bg-background border-2"
                   />
                 </div>
