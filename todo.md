@@ -65,3 +65,4 @@
 - [x] Add real-time progress indicators to Project Detail page for OCR operations
 - [x] Add image preview modal for viewing full-size page images
 - [x] Add text preview and editing to modal with side-by-side image and text view
+- [x] Add export preview showing first 3 pages before full document generation

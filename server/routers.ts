@@ -450,6 +450,48 @@ export const appRouter = router({
   }),
 
   export: router({
+    // Preview first 3 pages in selected format
+    preview: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          format: z.enum(["md", "txt"]),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const project = await getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        const pages = await getPagesByProjectId(input.projectId);
+        
+        // Filter only completed pages and take first 3
+        const completedPages = pages
+          .filter(p => p.status === "completed")
+          .slice(0, 3);
+        
+        if (completedPages.length === 0) {
+          throw new Error("No completed pages to preview");
+        }
+
+        const result = await exportDocument(completedPages, input.format as ExportFormat);
+        
+        // Return as string for preview
+        const previewText = Buffer.isBuffer(result) 
+          ? result.toString("utf-8")
+          : result;
+        
+        return {
+          preview: previewText,
+          pageCount: completedPages.length,
+          totalPages: pages.filter(p => p.status === "completed").length,
+        };
+      }),
+
     // Export project to specified format
     generate: protectedProcedure
       .input(

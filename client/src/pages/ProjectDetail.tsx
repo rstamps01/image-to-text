@@ -56,6 +56,8 @@ export default function ProjectDetail() {
   const [previewPage, setPreviewPage] = useState<{ id: number; url: string; filename: string; extractedText: string | null; status: string } | null>(null);
   const [editedText, setEditedText] = useState<string>("");
   const [isSavingText, setIsSavingText] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewFormat, setPreviewFormat] = useState<"md" | "txt">("md");
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -67,6 +69,11 @@ export default function ProjectDetail() {
   const retryFailedMutation = trpc.pages.retryFailed.useMutation();
   const retrySingleMutation = trpc.pages.retrySingle.useMutation();
   const updateTextMutation = trpc.pages.updateText.useMutation();
+  
+  const { data: previewData, isLoading: isLoadingPreview, refetch: refetchPreview } = trpc.export.preview.useQuery(
+    { projectId, format: previewFormat },
+    { enabled: showPreview && projectId > 0 }
+  );
 
   const handleDelete = async () => {
     try {
@@ -471,6 +478,23 @@ export default function ProjectDetail() {
                   </Select>
                 </div>
                 <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (exportFormat === "pdf" || exportFormat === "docx") {
+                      setPreviewFormat("md");
+                    } else {
+                      setPreviewFormat(exportFormat);
+                    }
+                    setShowPreview(true);
+                  }}
+                  disabled={isExporting}
+                  size="lg"
+                  className="shadow-elegant"
+                >
+                  <FileText className="mr-2 w-5 h-5" />
+                  Preview
+                </Button>
+                <Button
                   onClick={handleExport}
                   disabled={isExporting}
                   size="lg"
@@ -663,6 +687,48 @@ export default function ProjectDetail() {
                 </div>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Preview Modal */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Export Preview - First {previewData?.pageCount || 0} Pages</span>
+              <div className="flex gap-2">
+                <Select value={previewFormat} onValueChange={(v: "md" | "txt") => setPreviewFormat(v)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="md">Markdown</SelectItem>
+                    <SelectItem value="txt">Plain Text</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative max-h-[70vh] overflow-auto">
+            {isLoadingPreview ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : previewData ? (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  Showing first {previewData.pageCount} of {previewData.totalPages} completed pages
+                </div>
+                <pre className="whitespace-pre-wrap font-mono text-sm p-4 bg-muted/30 rounded-lg border">
+                  {previewData.preview}
+                </pre>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                No preview available
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
