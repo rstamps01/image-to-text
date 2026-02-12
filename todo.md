@@ -62,3 +62,4 @@
 - [x] Fix project cards showing 0 / 0 pages on home page
 - [x] Add bulk deletion feature for projects with checkboxes
 - [x] Fix individual project checkboxes not responding to clicks
+- [x] Add real-time progress indicators to Project Detail page for OCR operations

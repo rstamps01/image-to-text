@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,8 @@ export default function ProjectDetail() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [retryingPageId, setRetryingPageId] = useState<number | null>(null);
+  const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
+  const [retryingProgress, setRetryingProgress] = useState({ current: 0, total: 0 });
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -105,23 +108,45 @@ export default function ProjectDetail() {
   const handleRetryFailed = async () => {
     if (!data?.project) return;
 
-    setIsRetrying(true);
-    try {
-      const result = await retryFailedMutation.mutateAsync({ projectId });
+    const failedPages = data.pages.filter((p) => p.status === "failed");
+    if (failedPages.length === 0) {
+      toast.info("No failed pages to retry");
+      return;
+    }
 
-      if (result.retriedCount === 0) {
-        toast.info("No failed pages to retry");
-      } else {
-        toast.success(
-          `Retried ${result.retriedCount} pages. ${result.successCount} succeeded.`
-        );
-        // Refresh the project data to show updated statuses
-        await refetch();
+    setIsRetrying(true);
+    setRetryingProgress({ current: 0, total: failedPages.length });
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < failedPages.length; i++) {
+        try {
+          await retrySingleMutation.mutateAsync({ pageId: failedPages[i].id });
+          successCount++;
+        } catch (error) {
+          failCount++;
+        }
+        setRetryingProgress({ current: i + 1, total: failedPages.length });
       }
+
+      if (successCount > 0) {
+        toast.success(
+          `Retried ${failedPages.length} pages. ${successCount} succeeded.` +
+            (failCount > 0 ? ` ${failCount} failed.` : "")
+        );
+      } else {
+        toast.error("All pages failed to process");
+      }
+
+      // Refresh the project data to show updated statuses
+      await refetch();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to retry pages");
     } finally {
       setIsRetrying(false);
+      setRetryingProgress({ current: 0, total: 0 });
     }
   };
 
@@ -147,18 +172,21 @@ export default function ProjectDetail() {
     if (!data?.project) return;
 
     setIsProcessing(true);
+    setProcessingProgress({ current: 0, total: pendingPages.length });
+
     try {
       // Process each pending page
       let successCount = 0;
       let failCount = 0;
 
-      for (const page of pendingPages) {
+      for (let i = 0; i < pendingPages.length; i++) {
         try {
-          await retrySingleMutation.mutateAsync({ pageId: page.id });
+          await retrySingleMutation.mutateAsync({ pageId: pendingPages[i].id });
           successCount++;
         } catch (error) {
           failCount++;
         }
+        setProcessingProgress({ current: i + 1, total: pendingPages.length });
       }
 
       if (successCount > 0) {
@@ -176,6 +204,7 @@ export default function ProjectDetail() {
       toast.error(error instanceof Error ? error.message : "Failed to process pages");
     } finally {
       setIsProcessing(false);
+      setProcessingProgress({ current: 0, total: 0 });
     }
   };
 
@@ -306,7 +335,7 @@ export default function ProjectDetail() {
         {pendingPages.length > 0 && (
           <Card className="shadow-elegant mb-8 border-blue-500/20">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-blue-600 mb-1">
                     {pendingPages.length} {pendingPages.length === 1 ? "page" : "pages"} pending
@@ -334,6 +363,22 @@ export default function ProjectDetail() {
                   )}
                 </Button>
               </div>
+              {isProcessing && processingProgress.total > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Processing page {processingProgress.current} of {processingProgress.total}
+                    </span>
+                    <span className="font-medium text-blue-600">
+                      {Math.round((processingProgress.current / processingProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={(processingProgress.current / processingProgress.total) * 100}
+                    className="h-2"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -342,7 +387,7 @@ export default function ProjectDetail() {
         {failedPages.length > 0 && (
           <Card className="shadow-elegant mb-8 border-destructive/20">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-destructive mb-1">
                     {failedPages.length} {failedPages.length === 1 ? "page" : "pages"} failed
@@ -370,6 +415,22 @@ export default function ProjectDetail() {
                   )}
                 </Button>
               </div>
+              {isRetrying && retryingProgress.total > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Retrying page {retryingProgress.current} of {retryingProgress.total}
+                    </span>
+                    <span className="font-medium text-destructive">
+                      {Math.round((retryingProgress.current / retryingProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={(retryingProgress.current / retryingProgress.total) * 100}
+                    className="h-2"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
