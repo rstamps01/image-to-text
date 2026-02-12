@@ -16,7 +16,7 @@ import {
   updatePageStatus,
 } from "./db";
 import { storagePut } from "./storage";
-import { performOCR } from "./ocrService";
+import { performOCR, cleanupOCRText } from "./ocrService";
 import { exportDocument, ExportFormat } from "./exportService";
 import { nanoid } from "nanoid";
 
@@ -137,6 +137,32 @@ export const appRouter = router({
         await updateProject(input.projectId, { status: input.status });
         return { success: true };
       }),
+
+    // Update project settings (cleanup toggle, etc.)
+    updateSettings: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          enableCleanup: z.enum(["yes", "no"]).optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const project = await getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        const updates: any = {};
+        if (input.enableCleanup !== undefined) {
+          updates.enableCleanup = input.enableCleanup;
+        }
+
+        await updateProject(input.projectId, updates);
+        return { success: true };
+      }),
   }),
 
   pages: router({
@@ -206,9 +232,14 @@ export const appRouter = router({
           // Perform OCR
           const ocrResult = await performOCR(page.imageUrl);
 
+          // Apply cleanup if enabled for this project
+          const extractedText = project.enableCleanup === 'yes' 
+            ? cleanupOCRText(ocrResult.extractedText)
+            : ocrResult.extractedText;
+
           // Update page with OCR results
           await updatePage(input.pageId, {
-            extractedText: ocrResult.extractedText,
+            extractedText,
             detectedPageNumber: ocrResult.detectedPageNumber,
             formattingData: ocrResult.formattingData as any,
             confidenceScore: Math.round(ocrResult.confidence * 100), // Convert 0-1 to 0-100
@@ -395,9 +426,14 @@ export const appRouter = router({
           // Perform OCR
           const ocrResult = await performOCR(page.imageUrl);
 
+          // Apply cleanup if enabled for this project
+          const extractedText = project.enableCleanup === 'yes' 
+            ? cleanupOCRText(ocrResult.extractedText)
+            : ocrResult.extractedText;
+
           // Update page with OCR results
           await updatePage(input.pageId, {
-            extractedText: ocrResult.extractedText,
+            extractedText,
             detectedPageNumber: ocrResult.detectedPageNumber,
             formattingData: ocrResult.formattingData as any,
             status: "completed",
@@ -489,6 +525,11 @@ export const appRouter = router({
             // Perform OCR first to detect page number
             const ocrResult = await performOCR(url);
 
+            // Apply cleanup if enabled for this project
+            const extractedText = project.enableCleanup === 'yes' 
+              ? cleanupOCRText(ocrResult.extractedText)
+              : ocrResult.extractedText;
+
             // Determine placement
             const placement = determinePlacement(
               ocrResult.detectedPageNumber,
@@ -508,7 +549,7 @@ export const appRouter = router({
               imageKey: fileKey,
               imageUrl: url,
               status: "completed",
-              extractedText: ocrResult.extractedText,
+              extractedText,
               detectedPageNumber: ocrResult.detectedPageNumber,
               formattingData: ocrResult.formattingData as any,
               confidenceScore: Math.round(ocrResult.confidence * 100),

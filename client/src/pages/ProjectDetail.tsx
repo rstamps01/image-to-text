@@ -95,6 +95,12 @@ export default function ProjectDetail() {
   );
 
   const deleteProjectMutation = trpc.projects.delete.useMutation();
+  const updateSettingsMutation = trpc.projects.updateSettings.useMutation({
+    onSuccess: () => {
+      // Refresh project data to show updated settings
+      trpc.useUtils().projects.list.invalidate();
+    },
+  });
   const exportMutation = trpc.export.generate.useMutation();
   const retryFailedMutation = trpc.pages.retryFailed.useMutation();
   const retrySingleMutation = trpc.pages.retrySingle.useMutation();
@@ -475,6 +481,35 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* OCR Cleanup Toggle */}
+        <Card className="shadow-elegant mb-8">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">Post-OCR Text Cleanup</h3>
+                <p className="text-sm text-muted-foreground">
+                  Automatically remove common OCR artifacts (duplicate spaces, stray punctuation, formatting inconsistencies) from extracted text
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4">
+                <input
+                  type="checkbox"
+                  checked={project.enableCleanup === 'yes'}
+                  onChange={(e) => {
+                    const enabled = e.target.checked;
+                    updateSettingsMutation.mutate({
+                      projectId: project.id,
+                      enableCleanup: enabled ? 'yes' : 'no',
+                    });
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Process Pending Pages Button */}
         {pendingPages.length > 0 && (

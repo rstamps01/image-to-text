@@ -37,6 +37,8 @@ export const projects = mysqlTable("projects", {
   status: mysqlEnum("status", ["uploading", "processing", "completed", "failed"]).default("uploading").notNull(),
   totalPages: int("totalPages").default(0).notNull(),
   processedPages: int("processedPages").default(0).notNull(),
+  /** Enable post-OCR text cleanup to remove common artifacts */
+  enableCleanup: mysqlEnum("enableCleanup", ["yes", "no"]).default("no").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

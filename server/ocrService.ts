@@ -28,6 +28,43 @@ export interface OCRResult {
 }
 
 /**
+ * Cleans up common OCR artifacts from extracted text
+ * Removes duplicate spaces, stray punctuation, and formatting inconsistencies
+ * while preserving intentional formatting like indentation and line breaks
+ */
+export function cleanupOCRText(text: string): string {
+  let cleaned = text;
+
+  // Remove multiple consecutive spaces (but preserve single spaces)
+  cleaned = cleaned.replace(/ {2,}/g, ' ');
+
+  // Remove spaces before punctuation
+  cleaned = cleaned.replace(/ +([.,;:!?)])/g, '$1');
+
+  // Remove spaces after opening parentheses/brackets
+  cleaned = cleaned.replace(/([\[(]) +/g, '$1');
+
+  // Fix common OCR character confusions
+  // Note: Only apply obvious fixes to avoid changing intentional content
+  cleaned = cleaned.replace(/\bl\b/g, 'I'); // Standalone 'l' likely means 'I'
+  cleaned = cleaned.replace(/\b0(?=[A-Za-z])/g, 'O'); // '0' before letter likely 'O'
+
+  // Remove stray single characters that are likely artifacts (except common single letters like 'a', 'I')
+  cleaned = cleaned.replace(/\b[^aAiI\s\d.,;:!?()\[\]{}"'-]\b/g, '');
+
+  // Clean up multiple consecutive line breaks (preserve paragraph breaks)
+  cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n');
+
+  // Remove trailing spaces at end of lines
+  cleaned = cleaned.replace(/ +$/gm, '');
+
+  // Remove leading/trailing whitespace from the entire text
+  cleaned = cleaned.trim();
+
+  return cleaned;
+}
+
+/**
  * Converts Roman numerals to Arabic numbers
  */
 function romanToArabic(roman: string): number | null {

@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `enableCleanup` enum('yes','no') DEFAULT 'no' NOT NULL;
