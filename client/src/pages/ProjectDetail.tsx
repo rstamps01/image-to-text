@@ -42,6 +42,7 @@ export default function ProjectDetail() {
   const [exportFormat, setExportFormat] = useState<"md" | "txt" | "pdf" | "docx">("pdf");
   const [isExporting, setIsExporting] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryingPageId, setRetryingPageId] = useState<number | null>(null);
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
     { projectId },
@@ -51,6 +52,7 @@ export default function ProjectDetail() {
   const deleteProjectMutation = trpc.projects.delete.useMutation();
   const exportMutation = trpc.export.generate.useMutation();
   const retryFailedMutation = trpc.pages.retryFailed.useMutation();
+  const retrySingleMutation = trpc.pages.retrySingle.useMutation();
 
   const handleDelete = async () => {
     try {
@@ -119,6 +121,24 @@ export default function ProjectDetail() {
       toast.error(error instanceof Error ? error.message : "Failed to retry pages");
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleRetrySingle = async (pageId: number) => {
+    setRetryingPageId(pageId);
+    try {
+      const result = await retrySingleMutation.mutateAsync({ pageId });
+      toast.success(
+        result.pageNumber
+          ? `Page ${result.pageNumber} processed successfully`
+          : "Page processed successfully"
+      );
+      // Refresh the project data to show updated status
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to retry page");
+    } finally {
+      setRetryingPageId(null);
     }
   };
 
@@ -356,6 +376,30 @@ export default function ProjectDetail() {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-elegant" />
+                      
+                      {/* Retry button for failed pages */}
+                      {page.status === "failed" && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleRetrySingle(page.id)}
+                            disabled={retryingPageId === page.id}
+                            className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg"
+                          >
+                            {retryingPageId === page.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4 mr-1" />
+                                Retry
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="p-3">
                       <div className="flex items-center justify-between gap-2 mb-2">

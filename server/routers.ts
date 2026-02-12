@@ -339,6 +339,59 @@ export const appRouter = router({
           results,
         };
       }),
+
+    // Retry a single failed page
+    retrySingle: protectedProcedure
+      .input(z.object({ pageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const page = await getPageById(input.pageId);
+        if (!page) {
+          throw new Error("Page not found");
+        }
+
+        const project = await getProjectById(page.projectId);
+        if (!project || project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        if (page.status !== "failed") {
+          throw new Error("Only failed pages can be retried");
+        }
+
+        try {
+          // Reset status to processing
+          await updatePageStatus(input.pageId, "processing");
+
+          // Perform OCR
+          const ocrResult = await performOCR(page.imageUrl);
+
+          // Update page with OCR results
+          await updatePage(input.pageId, {
+            extractedText: ocrResult.extractedText,
+            detectedPageNumber: ocrResult.detectedPageNumber,
+            formattingData: ocrResult.formattingData as any,
+            status: "completed",
+            errorMessage: null,
+          });
+
+          // Update project processed pages count
+          await updateProject(page.projectId, {
+            processedPages: project.processedPages + 1,
+          });
+
+          return {
+            success: true,
+            pageNumber: ocrResult.detectedPageNumber,
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "OCR processing failed";
+          await updatePage(input.pageId, {
+            status: "failed",
+            errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
+      }),
   }),
 
   export: router({
