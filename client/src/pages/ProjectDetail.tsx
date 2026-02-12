@@ -42,6 +42,7 @@ export default function ProjectDetail() {
   const [exportFormat, setExportFormat] = useState<"md" | "txt" | "pdf" | "docx">("pdf");
   const [isExporting, setIsExporting] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [retryingPageId, setRetryingPageId] = useState<number | null>(null);
 
   const { data, isLoading, refetch } = trpc.projects.get.useQuery(
@@ -142,6 +143,42 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleProcessPending = async () => {
+    if (!data?.project) return;
+
+    setIsProcessing(true);
+    try {
+      // Process each pending page
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const page of pendingPages) {
+        try {
+          await retrySingleMutation.mutateAsync({ pageId: page.id });
+          successCount++;
+        } catch (error) {
+          failCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(
+          `Processed ${successCount} pages successfully` +
+            (failCount > 0 ? `. ${failCount} failed.` : "")
+        );
+      } else {
+        toast.error("All pages failed to process");
+      }
+
+      // Refresh the project data
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to process pages");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -172,6 +209,7 @@ export default function ProjectDetail() {
   const completedPages = pages.filter(p => p.status === "completed");
   const failedPages = pages.filter(p => p.status === "failed");
   const processingPages = pages.filter(p => p.status === "processing");
+  const pendingPages = pages.filter(p => p.status === "pending");
 
   return (
     <div className="min-h-screen bg-background">
@@ -263,6 +301,42 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Process Pending Pages Button */}
+        {pendingPages.length > 0 && (
+          <Card className="shadow-elegant mb-8 border-blue-500/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-600 mb-1">
+                    {pendingPages.length} {pendingPages.length === 1 ? "page" : "pages"} pending
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Start OCR processing for all pending pages
+                  </p>
+                </div>
+                <Button
+                  onClick={handleProcessPending}
+                  disabled={isProcessing}
+                  variant="outline"
+                  className="border-blue-500/30 hover:bg-blue-500/10"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 w-4 h-4" />
+                      Process All Pending
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Retry Failed Pages Button */}
         {failedPages.length > 0 && (

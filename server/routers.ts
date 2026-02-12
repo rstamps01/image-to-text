@@ -354,8 +354,8 @@ export const appRouter = router({
           throw new Error("Unauthorized");
         }
 
-        if (page.status !== "failed") {
-          throw new Error("Only failed pages can be retried");
+        if (page.status !== "failed" && page.status !== "pending") {
+          throw new Error("Only failed or pending pages can be processed");
         }
 
         try {

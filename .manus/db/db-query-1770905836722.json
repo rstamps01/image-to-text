@@ -1,0 +1,170 @@
+{
+  "query": "SELECT id, projectId, filename, status, errorMessage, createdAt FROM pages ORDER BY createdAt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute SELECT id, projectId, filename, status, errorMessage, createdAt FROM pages ORDER BY createdAt DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "31",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.13.27 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:59:01"
+    },
+    {
+      "id": "32",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.13.35 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:59:01"
+    },
+    {
+      "id": "29",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.13.09 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:59:00"
+    },
+    {
+      "id": "30",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.13.17 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:59:00"
+    },
+    {
+      "id": "28",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.13.02 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:59"
+    },
+    {
+      "id": "27",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.51 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:59"
+    },
+    {
+      "id": "26",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.39 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:58"
+    },
+    {
+      "id": "24",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.28 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:57"
+    },
+    {
+      "id": "25",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.34 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:57"
+    },
+    {
+      "id": "22",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.16 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:56"
+    },
+    {
+      "id": "23",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.23 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:56"
+    },
+    {
+      "id": "21",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.09 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:55"
+    },
+    {
+      "id": "20",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.12.02 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:55"
+    },
+    {
+      "id": "18",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.49 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:54"
+    },
+    {
+      "id": "19",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.55 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:54"
+    },
+    {
+      "id": "16",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.36 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:53"
+    },
+    {
+      "id": "17",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.42 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:53"
+    },
+    {
+      "id": "15",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.29 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:52"
+    },
+    {
+      "id": "14",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.06 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:52"
+    },
+    {
+      "id": "13",
+      "projectId": "7",
+      "filename": "Screenshot 2026-02-10 at 10.11.00 AM.png",
+      "status": "pending",
+      "errorMessage": "NULL",
+      "createdAt": "2026-02-12 13:58:51"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tprojectId\tfilename\tstatus\terrorMessage\tcreatedAt\n31\t7\tScreenshot 2026-02-10 at 10.13.27 AM.png\tpending\tNULL\t2026-02-12 13:59:01\n32\t7\tScreenshot 2026-02-10 at 10.13.35 AM.png\tpending\tNULL\t2026-02-12 13:59:01\n29\t7\tScreenshot 2026-02-10 at 10.13.09 AM.png\tpending\tNULL\t2026-02-12 13:59:00\n30\t7\tScreenshot 2026-02-10 at 10.13.17 AM.png\tpending\tNULL\t2026-02-12 13:59:00\n28\t7\tScreenshot 2026-02-10 at 10.13.02 AM.png\tpending\tNULL\t2026-02-12 13:58:59\n27\t7\tScreenshot 2026-02-10 at 10.12.51 AM.png\tpending\tNULL\t2026-02-12 13:58:59\n26\t7\tScreenshot 2026-02-10 at 10.12.39 AM.png\tpending\tNULL\t2026-02-12 13:58:58\n24\t7\tScreenshot 2026-02-10 at 10.12.28 AM.png\tpending\tNULL\t2026-02-12 13:58:57\n25\t7\tScreenshot 2026-02-10 at 10.12.34 AM.png\tpending\tNULL\t2026-02-12 13:58:57\n22\t7\tScreenshot 2026-02-10 at 10.12.16 AM.png\tpending\tNULL\t2026-02-12 13:58:56\n23\t7\tScreenshot 2026-02-10 at 10.12.23 AM.png\tpending\tNULL\t2026-02-12 13:58:56\n21\t7\tScreenshot 2026-02-10 at 10.12.09 AM.png\tpending\tNULL\t2026-02-12 13:58:55\n20\t7\tScreenshot 2026-02-10 at 10.12.02 AM.png\tpending\tNULL\t2026-02-12 13:58:55\n18\t7\tScreenshot 2026-02-10 at 10.11.49 AM.png\tpending\tNULL\t2026-02-12 13:58:54\n19\t7\tScreenshot 2026-02-10 at 10.11.55 AM.png\tpending\tNULL\t2026-02-12 13:58:54\n16\t7\tScreenshot 2026-02-10 at 10.11.36 AM.png\tpending\tNULL\t2026-02-12 13:58:53\n17\t7\tScreenshot 2026-02-10 at 10.11.42 AM.png\tpending\tNULL\t2026-02-12 13:58:53\n15\t7\tScreenshot 2026-02-10 at 10.11.29 AM.png\tpending\tNULL\t2026-02-12 13:58:52\n14\t7\tScreenshot 2026-02-10 at 10.11.06 AM.png\tpending\tNULL\t2026-02-12 13:58:52\n13\t7\tScreenshot 2026-02-10 at 10.11.00 AM.png\tpending\tNULL\t2026-02-12 13:58:51\n",
+  "stderr": "",
+  "execution_time_ms": 103
+}

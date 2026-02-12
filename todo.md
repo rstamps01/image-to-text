@@ -56,3 +56,6 @@
 - [x] Add real-time progress bars for OCR processing
 - [x] Add 'Retry All Failed' button to reprocess failed pages
 - [x] Add individual 'Retry' icon button on each failed page thumbnail
+
+## Bugs
+- [x] Fix pages stuck in pending state - OCR not triggering automatically
