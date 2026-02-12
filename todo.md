@@ -105,3 +105,4 @@
 - [x] Preserve indentation, line spacing, and paragraph spacing
 - [x] Format extracted text with proper indentation and justification to match original image
 - [x] Fix PDF export error: WinAnsi encoding cannot handle newline characters
+- [x] Fix excessive dots in table of contents formatting (should use proper leader dots, not extract all dots)
