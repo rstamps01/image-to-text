@@ -142,3 +142,9 @@
 - [x] Investigate why cleanup preview shows no differences between original and cleaned text
 - [x] Enhance cleanup logic to handle more OCR artifacts (extra spaces, line breaks, formatting issues)
 - [x] Test cleanup function with various text samples to verify effectiveness
+
+## Bug: Incomplete OCR Text Extraction
+- [x] Investigate why OCR only extracts partial text (3 lines) instead of full page content
+- [x] Fix OCR extraction to capture all text from uploaded images
+- [x] Test with problematic page to verify complete extraction
+- [x] Add Retry OCR button to allow re-processing pages with improved extraction

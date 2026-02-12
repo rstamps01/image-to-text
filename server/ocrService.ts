@@ -1,11 +1,5 @@
 import { invokeLLM } from "./_core/llm";
 
-interface FormattingData {
-  paragraphs?: number;
-  headings?: string[];
-  lists?: string[];
-}
-
 export interface FormattingBlock {
   type: 'paragraph' | 'heading' | 'list' | 'quote';
   content: string;
@@ -15,6 +9,10 @@ export interface FormattingBlock {
     italic?: boolean;
     alignment?: 'left' | 'center' | 'right' | 'justify';
   };
+}
+
+interface FormattingData {
+  blocks: FormattingBlock[];
 }
 
 interface OCRResult {
@@ -112,6 +110,86 @@ export function cleanupOCRText(text: string): string {
 }
 
 /**
+ * Parses extracted text into structured FormattingBlock array
+ */
+function parseTextIntoBlocks(text: string): FormattingBlock[] {
+  const blocks: FormattingBlock[] = [];
+  const lines = text.split('\n');
+  let currentParagraph: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+
+    // Skip empty lines
+    if (!trimmedLine) {
+      // If we have accumulated paragraph lines, save them
+      if (currentParagraph.length > 0) {
+        blocks.push({
+          type: 'paragraph',
+          content: currentParagraph.join('\n'),
+        });
+        currentParagraph = [];
+      }
+      continue;
+    }
+
+    // Detect headings (all caps or title case with short length)
+    const isAllCaps = /^[A-Z][A-Z\s\d]+$/.test(trimmedLine);
+    const isShortAndBold = trimmedLine.length < 80 && /^[A-Z]/.test(trimmedLine);
+    
+    if (isAllCaps && trimmedLine.length < 100) {
+      // Save any accumulated paragraph
+      if (currentParagraph.length > 0) {
+        blocks.push({
+          type: 'paragraph',
+          content: currentParagraph.join('\n'),
+        });
+        currentParagraph = [];
+      }
+      
+      // Add as heading
+      blocks.push({
+        type: 'heading',
+        content: trimmedLine,
+        level: 1,
+        formatting: { bold: true },
+      });
+    } else if (isShortAndBold && (trimmedLine.startsWith('Section') || trimmedLine.startsWith('Article') || trimmedLine.startsWith('Chapter'))) {
+      // Save any accumulated paragraph
+      if (currentParagraph.length > 0) {
+        blocks.push({
+          type: 'paragraph',
+          content: currentParagraph.join('\n'),
+        });
+        currentParagraph = [];
+      }
+      
+      // Add as heading
+      blocks.push({
+        type: 'heading',
+        content: trimmedLine,
+        level: 2,
+        formatting: { bold: true },
+      });
+    } else {
+      // Regular paragraph line
+      currentParagraph.push(line);
+    }
+  }
+
+  // Add any remaining paragraph
+  if (currentParagraph.length > 0) {
+    blocks.push({
+      type: 'paragraph',
+      content: currentParagraph.join('\n'),
+    });
+  }
+
+  return blocks;
+}
+
+/**
  * Converts Roman numerals to Arabic numbers
  */
 function romanToArabic(roman: string): number | null {
@@ -188,7 +266,13 @@ export async function performOCR(imageUrl: string): Promise<OCRResult> {
             role: "system",
             content: `You are an OCR system that extracts text from book page images with high accuracy.
 
-CRITICAL FORMATTING RULES:
+CRITICAL EXTRACTION RULES:
+1. Extract EVERY SINGLE LINE of text visible in the image - do not skip or truncate
+2. For Table of Contents pages: Extract ALL sections from top to bottom, not just the first few
+3. Continue extraction until you reach the bottom of the visible page
+4. If you see "Section 3.17" through "Section 4.12", extract ALL of them, not just 3.17-3.19
+
+FORMATTING RULES:
 1. Preserve the EXACT line-by-line structure of the original image
 2. Each line in your output must start and end with the SAME words as in the image
 3. Maintain all indentation, spacing, and paragraph breaks EXACTLY as shown
@@ -198,14 +282,16 @@ CRITICAL FORMATTING RULES:
 SPECIAL HANDLING:
 - Table of Contents: Recognize the structure with section titles and page numbers
 - DO NOT include dotted leaders (....) between titles and page numbers
-- Extract only the section titles and their corresponding page numbers
+- Extract ALL section titles and their corresponding page numbers (not just the first few)
 - Preserve the hierarchical indentation of sections and subsections
+- Continue extracting until the end of the page
 
 OUTPUT FORMAT:
 - Return ONLY the extracted text
 - Maintain exact line breaks and indentation from the image
 - Do not add explanations, metadata, or formatting markers
-- Each line should mirror the original image's line structure`,
+- Each line should mirror the original image's line structure
+- Extract the COMPLETE page content from top to bottom`,
           },
           {
             role: "user",
@@ -230,18 +316,14 @@ OUTPUT FORMAT:
       // Extract page number
       const detectedPageNumber = await extractPageNumber(extractedText);
 
-      // Basic formatting analysis
-      const paragraphs = (extractedText.match(/\n\n+/g) || []).length + 1;
-      const headings = extractedText
-        .split("\n")
-        .filter((line: string) => /^[A-Z][A-Z\s]+$/.test(line.trim()));
+      // Parse text into structured blocks
+      const blocks = parseTextIntoBlocks(extractedText);
 
       return {
         extractedText,
         detectedPageNumber,
         formattingData: {
-          paragraphs,
-          headings,
+          blocks,
         },
         confidence,
       };

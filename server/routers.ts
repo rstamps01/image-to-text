@@ -445,6 +445,56 @@ export const appRouter = router({
         };
       }),
 
+    // Reprocess a page (even if completed) to fix extraction issues
+    reprocessPage: protectedProcedure
+      .input(z.object({ pageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const page = await getPageById(input.pageId);
+        if (!page) {
+          throw new Error("Page not found");
+        }
+
+        const project = await getProjectById(page.projectId);
+        if (!project || project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        try {
+          // Reset status to processing
+          await updatePageStatus(input.pageId, "processing");
+
+          // Perform OCR with improved extraction
+          const ocrResult = await performOCR(page.imageUrl);
+
+          // Apply cleanup if enabled for this project
+          const extractedText = project.enableCleanup === 'yes' 
+            ? cleanupOCRText(ocrResult.extractedText)
+            : ocrResult.extractedText;
+
+          // Update page with new OCR results
+          await updatePage(input.pageId, {
+            extractedText,
+            detectedPageNumber: ocrResult.detectedPageNumber,
+            formattingData: ocrResult.formattingData as any,
+            status: "completed",
+            errorMessage: null,
+          });
+
+          return {
+            success: true,
+            pageNumber: ocrResult.detectedPageNumber,
+            extractedText,
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "OCR processing failed";
+          await updatePage(input.pageId, {
+            status: "failed",
+            errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
+      }),
+
     // Retry a single failed page
     retrySingle: protectedProcedure
       .input(z.object({ pageId: z.number() }))

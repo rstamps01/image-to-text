@@ -109,6 +109,7 @@ export default function ProjectDetail() {
   const retryFailedMutation = trpc.pages.retryFailed.useMutation();
   const retrySingleMutation = trpc.pages.retrySingle.useMutation();
   const updateTextMutation = trpc.pages.updateText.useMutation();
+  const reprocessPageMutation = trpc.pages.reprocessPage.useMutation();
   const reorderMutation = trpc.pages.reorderManual.useMutation();
   const addPagesMutation = trpc.pages.addPages.useMutation();
   
@@ -759,35 +760,70 @@ export default function ProjectDetail() {
             <DialogTitle className="flex items-center justify-between">
               <span>{previewPage?.filename}</span>
               {previewPage?.status === "completed" && (
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    if (!previewPage) return;
-                    setIsSavingText(true);
-                    try {
-                      await updateTextMutation.mutateAsync({
-                        pageId: previewPage.id,
-                        extractedText: editedText,
-                      });
-                      toast.success("Text saved successfully");
-                      await refetch();
-                    } catch (error) {
-                      toast.error(error instanceof Error ? error.message : "Failed to save text");
-                    } finally {
-                      setIsSavingText(false);
-                    }
-                  }}
-                  disabled={isSavingText || editedText === previewPage?.extractedText}
-                >
-                  {isSavingText ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!previewPage) return;
+                      setIsSavingText(true);
+                      try {
+                        const result = await reprocessPageMutation.mutateAsync({ pageId: previewPage.id });
+                        toast.success("Page reprocessed successfully");
+                        setEditedText(result.extractedText);
+                        await refetch();
+                        // Update preview page with new text
+                        setPreviewPage(prev => prev ? { ...prev, extractedText: result.extractedText } : null);
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Failed to reprocess page");
+                      } finally {
+                        setIsSavingText(false);
+                      }
+                    }}
+                    disabled={isSavingText}
+                  >
+                    {isSavingText ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Retry OCR
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      if (!previewPage) return;
+                      setIsSavingText(true);
+                      try {
+                        await updateTextMutation.mutateAsync({
+                          pageId: previewPage.id,
+                          extractedText: editedText,
+                        });
+                        toast.success("Text saved successfully");
+                        await refetch();
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Failed to save text");
+                      } finally {
+                        setIsSavingText(false);
+                      }
+                    }}
+                    disabled={isSavingText || editedText === previewPage?.extractedText}
+                  >
+                    {isSavingText ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </div>
               )}
             </DialogTitle>
           </DialogHeader>
