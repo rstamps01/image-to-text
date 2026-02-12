@@ -447,6 +447,33 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Manually reorder pages by dragging
+    reorderManual: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          pageIds: z.array(z.number()),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const project = await getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+        if (project.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        // Update sort order for each page
+        for (let i = 0; i < input.pageIds.length; i++) {
+          await updatePage(input.pageIds[i]!, {
+            sortOrder: i,
+          });
+        }
+
+        return { success: true };
+      }),
   }),
 
   export: router({

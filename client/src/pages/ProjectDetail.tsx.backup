@@ -17,7 +17,6 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { SortablePageCard } from "@/components/SortablePageCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -608,22 +607,84 @@ export default function ProjectDetail() {
                 >
                   <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {localPages.map(page => (
-                      <SortablePageCard
-                        key={page.id}
-                        page={page}
-                        onPreview={() => {
-                          setPreviewPage({ 
-                            id: page.id, 
-                            url: page.imageUrl, 
-                            filename: page.filename,
-                            extractedText: page.extractedText,
-                            status: page.status
-                          });
-                          setEditedText(page.extractedText || "");
-                        }}
-                        onRetry={() => handleRetrySingle(page.id)}
-                        isRetrying={retryingPageId === page.id}
+                  <div
+                    key={page.id}
+                    className="relative group rounded-lg border border-border overflow-hidden bg-card hover:shadow-elegant transition-elegant"
+                  >
+                    <div 
+                      className="aspect-[3/4] relative cursor-pointer"
+                      onClick={() => {
+                        setPreviewPage({ 
+                          id: page.id, 
+                          url: page.imageUrl, 
+                          filename: page.filename,
+                          extractedText: page.extractedText,
+                          status: page.status
+                        });
+                        setEditedText(page.extractedText || "");
+                      }}
+                    >
+                      <img
+                        src={page.imageUrl}
+                        alt={page.filename}
+                        className="w-full h-full object-cover"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-elegant" />
+                      
+                      {/* Retry button for failed pages */}
+                      {page.status === "failed" && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRetrySingle(page.id);
+                            }}
+                            disabled={retryingPageId === page.id}
+                            className="opacity-0 group-hover:opacity-100 transition-elegant shadow-lg"
+                          >
+                            {retryingPageId === page.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4 mr-1" />
+                                Retry
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-medium truncate">{page.filename}</span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            page.status === "completed"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : page.status === "failed"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              : page.status === "processing"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                          }`}
+                        >
+                          {page.status}
+                        </span>
+                      </div>
+                      {page.detectedPageNumber && (
+                        <p className="text-xs text-muted-foreground">
+                          Page {page.detectedPageNumber}
+                        </p>
+                      )}
+                      {page.errorMessage && (
+                        <p className="text-xs text-destructive mt-1">{page.errorMessage}</p>
+                      )}
+                    </div>
+                  </div>
                 ))}
                   </div>
                 </SortableContext>
