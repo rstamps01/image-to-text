@@ -113,3 +113,6 @@
 - [x] Add cleanup toggle UI in project detail page
 - [x] Apply cleanup conditionally based on project setting
 - [x] Write tests for cleanup functionality
+
+## Bug Fixes (Urgent)
+- [x] Fix invalid hook call error in updateSettings mutation (trpc.useUtils() called in callback)

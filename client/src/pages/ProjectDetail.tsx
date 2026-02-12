@@ -94,11 +94,12 @@ export default function ProjectDetail() {
     { enabled: projectId > 0 }
   );
 
+  const utils = trpc.useUtils();
   const deleteProjectMutation = trpc.projects.delete.useMutation();
   const updateSettingsMutation = trpc.projects.updateSettings.useMutation({
     onSuccess: () => {
       // Refresh project data to show updated settings
-      trpc.useUtils().projects.list.invalidate();
+      utils.projects.list.invalidate();
     },
   });
   const exportMutation = trpc.export.generate.useMutation();
