@@ -134,3 +134,6 @@
 - [x] Add cleanup toggle to project creation form UI
 - [x] Update backend createProject to accept enableCleanup parameter
 - [x] Test cleanup applies during initial page upload when enabled at creation
+
+## Bug Fixes (Current)
+- [x] Fix Preview Cleanup modal displaying as narrow left panel instead of full-screen
