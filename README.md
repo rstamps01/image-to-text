@@ -12,6 +12,9 @@ A sophisticated web application that converts scanned book pages into searchable
 - **Intelligent Ordering**: Pages are automatically sorted based on detected page numbers, regardless of upload sequence
 - **Format Preservation**: Maintains document structure including headings, paragraphs, lists, and text formatting (bold, italic)
 - **Multi-Format Export**: Download converted documents as PDF, DOCX, Markdown, or plain text
+- **Post-OCR Text Cleanup**: Automatically remove common OCR artifacts (duplicate spaces, stray punctuation, formatting inconsistencies)
+- **Retry OCR Processing**: Reprocess individual pages with improved extraction for incomplete or low-quality results
+- **Cleanup Preview**: Side-by-side comparison of original vs cleaned text before applying changes
 
 ### 🎨 Design
 
@@ -125,6 +128,7 @@ book-page-converter/
 - `userId` - Owner reference
 - `title` - Project name
 - `description` - Optional description
+- `enableCleanup` - Toggle for automatic text cleanup
 - `status` - uploading | processing | completed | failed
 - `totalPages` - Total number of pages
 - `processedPages` - Number of completed pages
@@ -140,7 +144,9 @@ book-page-converter/
 - `sortOrder` - Numeric sort position
 - `status` - pending | processing | completed | failed
 - `extractedText` - OCR result text
-- `formattingData` - Structured formatting (JSON)
+- `formattingData` - Structured formatting blocks (JSON)
+- `confidence` - OCR confidence score (0-100)
+- `placementConfidence` - Confidence in page placement (0-100)
 - `errorMessage` - Error details if failed
 - `createdAt`, `updatedAt` - Timestamps
 
@@ -213,7 +219,7 @@ pnpm test
 
 All tests pass successfully:
 - 3 test files
-- 20 test cases
+- 27 test cases
 - 100% pass rate
 
 ## Development
@@ -259,17 +265,45 @@ All required environment variables are automatically injected by the Manus platf
 - Parallel OCR processing for multiple pages
 - Automatic page reordering after processing
 
+## Recent Enhancements
+
+### Text Cleanup Feature
+The cleanup function removes common OCR artifacts to improve text quality:
+- Duplicate and excessive spaces
+- Misplaced punctuation (spaces before periods, commas)
+- Character confusion errors (l vs I, 0 vs O)
+- Inconsistent spacing around hyphens, dashes, and slashes
+- Malformed ellipses and quote marks
+- Excessive line breaks and formatting inconsistencies
+
+Cleanup can be enabled during project creation or toggled later. A preview feature shows before/after comparison using a sample page.
+
+### Retry OCR Processing
+Pages with incomplete or low-quality extraction can be reprocessed:
+- Improved OCR prompt emphasizes extracting every line from top to bottom
+- Special handling for table of contents pages with dotted leaders
+- Fixed data structure to properly support formatting blocks
+- "Retry OCR" button available in page preview modal for any completed page
+
+### Enhanced Page Management
+- Drag-and-drop page reordering with visual feedback
+- Side-by-side image and text preview with zoom controls
+- Editable text with save functionality
+- Confidence scores displayed on each page
+- Bulk retry for failed pages
+- Add pages to existing projects with intelligent placement
+
 ## Future Enhancements
 
 Potential features for future versions:
-- Batch project processing
-- OCR confidence scores
-- Manual text editing before export
-- Custom page ordering (drag-and-drop)
+- Batch retry for all pages with improved extraction
+- Extraction quality metrics (character count, section count)
+- Auto-retry on low confidence scores
 - Table detection and extraction
 - Multi-column layout support
 - Language detection and translation
 - Collaborative projects with sharing
+- Custom cleanup rule configuration
 
 ## License
 
