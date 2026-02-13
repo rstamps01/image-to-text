@@ -153,3 +153,8 @@
 - [x] Investigate database error: "Failed query: update `pages` set `formattingData` = ?" 
 - [x] Fix data serialization issue with formattingData.blocks structure
 - [x] Test page processing to verify database updates work correctly
+
+## Bug: Page Stuck in Processing Status
+- [x] Investigate why page is stuck in "Processing" status
+- [x] Reset page status and resubmit for OCR processing
+- [x] Verify page completes successfully

@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, filename, projectId, status, errorMessage FROM pages WHERE projectId = 240001 AND status = 'processing';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49cxSE1jUeHq7LY.14eb3d3663f9 --database RoQdZtzQtFtTQwpt2ApNcz --execute SELECT id, filename, projectId, status, errorMessage FROM pages WHERE projectId = 240001 AND status = 'processing';",
+  "rows": [
+    {
+      "id": "180040",
+      "filename": "Screenshot 2026-02-12 at 6.36.55 AM.png",
+      "projectId": "240001",
+      "status": "processing",
+      "errorMessage": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfilename\tprojectId\tstatus\terrorMessage\n180040\tScreenshot 2026-02-12 at 6.36.55 AM.png\t240001\tprocessing\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 158
+}
