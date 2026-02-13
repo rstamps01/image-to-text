@@ -2,7 +2,10 @@ import { invokeLLM } from "./_core/llm";
 
 export interface FormattingBlock {
   type: 'paragraph' | 'heading' | 'list' | 'quote';
-  content: string;
+  /** Starting line index in the extractedText */
+  startLine: number;
+  /** Ending line index in the extractedText */
+  endLine: number;
   level?: number;
   formatting?: {
     bold?: boolean;
@@ -115,7 +118,7 @@ export function cleanupOCRText(text: string): string {
 function parseTextIntoBlocks(text: string): FormattingBlock[] {
   const blocks: FormattingBlock[] = [];
   const lines = text.split('\n');
-  let currentParagraph: string[] = [];
+  let currentParagraphStart: number | null = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -124,12 +127,13 @@ function parseTextIntoBlocks(text: string): FormattingBlock[] {
     // Skip empty lines
     if (!trimmedLine) {
       // If we have accumulated paragraph lines, save them
-      if (currentParagraph.length > 0) {
+      if (currentParagraphStart !== null) {
         blocks.push({
           type: 'paragraph',
-          content: currentParagraph.join('\n'),
+          startLine: currentParagraphStart,
+          endLine: i - 1,
         });
-        currentParagraph = [];
+        currentParagraphStart = null;
       }
       continue;
     }
@@ -140,49 +144,56 @@ function parseTextIntoBlocks(text: string): FormattingBlock[] {
     
     if (isAllCaps && trimmedLine.length < 100) {
       // Save any accumulated paragraph
-      if (currentParagraph.length > 0) {
+      if (currentParagraphStart !== null) {
         blocks.push({
           type: 'paragraph',
-          content: currentParagraph.join('\n'),
+          startLine: currentParagraphStart,
+          endLine: i - 1,
         });
-        currentParagraph = [];
+        currentParagraphStart = null;
       }
       
       // Add as heading
       blocks.push({
         type: 'heading',
-        content: trimmedLine,
+        startLine: i,
+        endLine: i,
         level: 1,
         formatting: { bold: true },
       });
     } else if (isShortAndBold && (trimmedLine.startsWith('Section') || trimmedLine.startsWith('Article') || trimmedLine.startsWith('Chapter'))) {
       // Save any accumulated paragraph
-      if (currentParagraph.length > 0) {
+      if (currentParagraphStart !== null) {
         blocks.push({
           type: 'paragraph',
-          content: currentParagraph.join('\n'),
+          startLine: currentParagraphStart,
+          endLine: i - 1,
         });
-        currentParagraph = [];
+        currentParagraphStart = null;
       }
       
       // Add as heading
       blocks.push({
         type: 'heading',
-        content: trimmedLine,
+        startLine: i,
+        endLine: i,
         level: 2,
         formatting: { bold: true },
       });
     } else {
       // Regular paragraph line
-      currentParagraph.push(line);
+      if (currentParagraphStart === null) {
+        currentParagraphStart = i;
+      }
     }
   }
 
   // Add any remaining paragraph
-  if (currentParagraph.length > 0) {
+  if (currentParagraphStart !== null) {
     blocks.push({
       type: 'paragraph',
-      content: currentParagraph.join('\n'),
+      startLine: currentParagraphStart,
+      endLine: lines.length - 1,
     });
   }
 

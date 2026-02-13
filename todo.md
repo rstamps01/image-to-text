@@ -148,3 +148,8 @@
 - [x] Fix OCR extraction to capture all text from uploaded images
 - [x] Test with problematic page to verify complete extraction
 - [x] Add Retry OCR button to allow re-processing pages with improved extraction
+
+## Bug: Database Error When Updating Pages
+- [x] Investigate database error: "Failed query: update `pages` set `formattingData` = ?" 
+- [x] Fix data serialization issue with formattingData.blocks structure
+- [x] Test page processing to verify database updates work correctly

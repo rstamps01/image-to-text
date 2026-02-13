@@ -5,6 +5,14 @@ import { Page } from "../drizzle/schema";
 import { FormattingBlock } from "./ocrService";
 
 /**
+ * Extracts content for a formatting block from the full text using line indices
+ */
+function getBlockContent(text: string, block: FormattingBlock): string {
+  const lines = text.split('\n');
+  return lines.slice(block.startLine, block.endLine + 1).join('\n');
+}
+
+/**
  * Export format options
  */
 export type ExportFormat = "md" | "txt" | "pdf" | "docx";
@@ -30,20 +38,22 @@ export function exportToMarkdown(pages: Page[]): string {
       const formattingData = page.formattingData as { blocks: FormattingBlock[] };
       
       for (const block of formattingData.blocks) {
+        const blockContent = getBlockContent(page.extractedText, block);
+        
         switch (block.type) {
           case "heading":
             const level = block.level || 1;
-            markdown += `${"#".repeat(level)} ${block.content}\n\n`;
+            markdown += `${"#".repeat(level)} ${blockContent}\n\n`;
             break;
           case "list":
-            markdown += `- ${block.content}\n`;
+            markdown += `- ${blockContent}\n`;
             break;
           case "quote":
-            markdown += `> ${block.content}\n\n`;
+            markdown += `> ${blockContent}\n\n`;
             break;
           case "paragraph":
           default:
-            let content = block.content;
+            let content = blockContent;
             if (block.formatting?.bold) {
               content = `**${content}**`;
             }
@@ -122,6 +132,7 @@ export async function exportToPDF(pages: Page[]): Promise<Buffer> {
       const formattingData = pageData.formattingData as { blocks: FormattingBlock[] };
 
       for (const block of formattingData.blocks) {
+        const blockContent = getBlockContent(pageData.extractedText, block);
         let fontSize = 12;
         let currentFont = font;
 
@@ -136,7 +147,7 @@ export async function exportToPDF(pages: Page[]): Promise<Buffer> {
         }
 
         // Split content by newlines first, then word wrap each line
-        const contentLines = block.content.split(/\r?\n/);
+        const contentLines = blockContent.split(/\r?\n/);
         
         for (const contentLine of contentLines) {
           // Word wrap text for each line
@@ -245,6 +256,7 @@ export async function exportToDOCX(pages: Page[]): Promise<Buffer> {
       const formattingData = pageData.formattingData as { blocks: FormattingBlock[] };
 
       for (const block of formattingData.blocks) {
+        const blockContent = getBlockContent(pageData.extractedText, block);
         let heading: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
         const textRuns: TextRun[] = [];
 
@@ -262,7 +274,7 @@ export async function exportToDOCX(pages: Page[]): Promise<Buffer> {
 
         textRuns.push(
           new TextRun({
-            text: block.content,
+            text: blockContent,
             bold: block.formatting?.bold || block.type === "heading",
             italics: block.formatting?.italic,
           })
